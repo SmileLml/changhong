@@ -1,0 +1,3 @@
+.report-view .module-menu .tree-item > .selected .item-content {color: var(--menu-selected-color) !important; background-color: var(--color-primary-50);}
+.report-view .module-menu .tree-item .item-content {padding: 4px;}
+.report-view .module-menu .module-title {font-size: 0.875rem;}

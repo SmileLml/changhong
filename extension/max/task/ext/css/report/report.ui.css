@@ -1,0 +1,4 @@
+.module-menu .tree-item > .selected .item-content {color: var(--menu-selected-color) !important; background-color: var(--color-primary-50);}
+.module-menu .tree-item .item-content {padding: 4px;}
+
+#mainContainer, #mainContent {min-height: calc(100vh - 3rem);}

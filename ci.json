@@ -1,0 +1,72 @@
+{
+  "pkg": {
+    "xuanxuan": {
+      "gitVersion": "02da3cc63dd6a5b60d04726a97578646178ee3e6",
+      "version": "9.3"
+    },
+    "zentaopms": {
+      "gitRepo": "zentao/zentaopms",
+      "gitVersion": "release/21.7.5"
+    },
+    "zentaoext": {
+      "gitRepo": "zentao/zentaoext",
+      "gitVersion": "release/12.4"
+    },
+    "zentaomax": {
+      "gitVersion": "release/7.4"
+    },
+    "zentaoipd": {
+      "gitVersion": "release/4.4"
+    },
+    "devops": {
+      "gitRepo": "zentao/devops"
+    },
+    "downgrade": {
+      "gitRepo": "ci/zentaopms-downgrade"
+    },
+    "downgradeExt": {
+      "gitRepo": "ci/zentaoext-downgrade"
+    },
+    "blocksuite": {
+        "version": "0.19.5"
+    }
+  },
+  "image": {
+    "phpversion": "8.1.29",
+    "public": {
+      "namespace": {
+        "release": "app",
+        "snapshot": "test"
+      }
+    },
+    "internal": {
+      "namespace": {
+        "release": "app",
+        "snapshot": "test"
+      }
+    }
+  },
+  "downgrade": {
+    "versions": "8.4,8.1,7.2,7.1,7.0"
+  },
+  "upload": {
+    "bucket": "download",
+    "nexus": {
+      "release": "easycorp",
+      "snapshot": "easycorp-snapshot",
+      "source": "easycorp-source"
+    }
+  },
+  "push_version": "true",
+  "deploy": {
+    "zentaopaas": {
+      "enabled": true,
+      "server": "https://b7du.corp.cc"
+    }
+  },
+  "notice": {
+    "users": "qishiyao,zhujinyong,caoyanyi",
+    "groups": "38a4e39b-df5d-4606-a988-e22673bdc358",
+    "groups2": "38a4e39b-df5d-4606-a988-e22673bdc358,6f5bb3f5-f4e3-4f67-963e-0cc9d59ad3c7"
+  }
+}
