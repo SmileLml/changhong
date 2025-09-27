@@ -268,6 +268,7 @@ class install extends control
         {
             /* 重新启动session，因为上次启动session时保存路径为null。*/
             /* Restart the session because the session save path is null when start the session last time. */
+            $myConfig = $this->session->myConfig;
             session_write_close();
 
             $tmpRootInfo     = $this->installZen->getTmpRoot();
@@ -282,6 +283,7 @@ class install extends control
 
             session_start();
             $this->session->set('installing', true);
+            $this->session->set('myConfig', $myConfig);
         }
 
         $this->view->app           = $this->app;
