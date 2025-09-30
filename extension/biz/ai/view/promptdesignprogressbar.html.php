@@ -14,11 +14,9 @@
   <div class='steps'>
     <?php
     $step = preg_replace('/^prompt/', '', $app->methodName);
-    $stepSequence = array('assignrole', 'selectdatasource', 'setpurpose', 'settargetform', 'finalize');
-
+    $stepSequence = array('assignrole', 'selectdatasource', 'setpurpose', 'settriggeraction', 'settargetform', 'finalize');
     $currentStepIndex = array_search($step, $stepSequence);
     $lastActiveStepIndex = array_search($lastActiveStep, $stepSequence);
-
     $stepstatus = array();
 
     foreach($stepSequence as $index => $stepName)

@@ -21,7 +21,6 @@ class myAI extends ai
         if(empty($object)) return $this->send(array('result' => 'fail', 'message' => sprintf($this->lang->ai->execute->failFormat, $this->lang->ai->execute->failReasons['noObjectData'])));
 
         list($objectData, $rawObject) = $object;
-
         if(!empty($prompt->targetForm))
         {
             list($location, $stop) = $this->ai->getTargetFormLocation($prompt, $rawObject);

@@ -24,3 +24,5 @@ $lang->requestlog->purposeList['submitTaks']    = '提交任务、交付物';
 $lang->requestlog->statusList = array();
 $lang->requestlog->statusList['success'] = '成功';
 $lang->requestlog->statusList['fail']    = '失败';
+
+$lang->requestlog->keepDays = '日志保留天数必须是大于5的整数天';

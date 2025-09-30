@@ -20,7 +20,18 @@ class myAI extends ai
             $originalPrompt = clone $prompt;
 
             /* Fix bug: targetForm is null. */
-            if(isset($data->targetForm)) $prompt->targetForm = $data->targetForm;
+            if(isset($data->targetForm))
+            {
+                $prompt->targetForm = $data->targetForm;
+            }
+            else if(!empty($prompt->triggerControl))
+            {
+                $prompt->targetForm = 'other.score';
+            }
+            else
+            {
+                $prompt->targetForm = '';
+            }
 
             $this->ai->updatePrompt($prompt, $originalPrompt);
 

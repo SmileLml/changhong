@@ -528,7 +528,12 @@ class aiModel extends model
             curl_setopt($ch, CURLOPT_PROXYTYPE, static::getProxyType($this->modelConfig->proxyType));
         }
 
-        $result = curl_exec($ch);
+        /* Add requestlog to table requestLog*/
+        $requestTime  = date('Y-m-d H:i:s');
+        $result       = curl_exec($ch);
+        $responseTime = date('Y-m-d H:i:s');
+        $requestData  = $this->buildRequestLogData($url, $postData, $requestHeaders, $requestTime, $responseTime, $result);
+        $this->loadModel('requestlog')->saveRequestLog($requestData);
 
         $this->saveRequestLog($data, $result);
 

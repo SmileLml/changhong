@@ -74,4 +74,21 @@ class requestlog extends control
         $this->view->response = $this->requestlog->getByID($id);
         $this->display();
     }
+
+    /**
+     * 删除过期日志。
+     * Delete logs older than save days.
+     *
+     * @access public
+     * @return bool
+     */
+    public function delete($keep = '90')
+    {
+        $this->app->loadLang('ai');
+        if(ctype_digit($keep)==false || $keep < '5') return $this->send(array('result' => 'fail', 'message' => $this->lang->requestlog->keepDays));
+        $date = date(DT_DATE1, strtotime("-{$keep} days"));
+        $this->dao->delete()->from(TABLE_REQUESTLOG)->where('requestTime')->lt($date)->andWhere('purpose')->eq($this->lang->ai->promptMenu->dropdownTitle)->exec();
+        return !dao::isError();
+    }
+
 }

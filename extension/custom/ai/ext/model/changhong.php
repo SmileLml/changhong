@@ -182,3 +182,42 @@ public function getDataSource()
 
     return $dataSource;
 }
+
+public function buildRequestLogData($url, $data, $headers, $requestTime, $responseTime, $result)
+{
+    $logData = array();
+    $logData['url']      = $url;
+    $logData['clientIP'] =  $_SERVER['REMOTE_ADDR'];
+    $logData['requestUser'] = $this->app->user->account;
+    $logData['requestTime'] = $requestTime;
+    $requeststamp  = strtotime($requestTime);
+    $responsestamp = strtotime($responseTime);
+    $diffSeconds   = abs($responsestamp - $requeststamp);
+    $logData['responseTime'] = $diffSeconds * 1000;
+    if(!$result) $logData['status'] = 'fail';
+    else $logData['status'] = 'success';
+    $logData['params']  = $data;
+    $logData['response'] = $result;
+    $logData['purpose']  = $this->lang->ai->promptMenu->dropdownTitle;
+    return $logData;
+}
+
+/**
+ * Get the last active step of prompt by id.
+ *
+ * @param  object $prompt
+ * @access public
+ * @return string
+ */
+public function getLastActiveStep($prompt)
+{
+    if(!empty($prompt))
+    {
+        if($prompt->status == 'active')     return 'finalize';
+        if(!empty($prompt->targetForm))     return 'settargetform';
+        if(!empty($prompt->triggerControl)) return 'settriggeraction';
+        if(!empty($prompt->purpose))        return 'setpurpose';
+        if(!empty($prompt->source))         return 'selectdatasource';
+    }
+    return 'assignrole';
+}
