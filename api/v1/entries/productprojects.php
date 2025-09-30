@@ -2,12 +2,12 @@
 /**
  * The product projects entry point of ZenTaoPMS.
  *
- * @copyright   Copyright 2009-2023 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
+ * @copyright   Copyright 2009-2021 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Chunsheng Wang <chunsheng@cnezsoft.com>
  * @package     entries
  * @version     1
- * @link        https://www.zentao.net
+ * @link        http://www.zentao.net
  */
 class productProjectsEntry extends entry
 {
@@ -63,8 +63,6 @@ class productProjectsEntry extends entry
      */
     public function post()
     {
-        $control = $this->loadController('project', 'create');
-
         $fields = 'name,begin,end,products';
         $this->batchSetPost($fields);
 
@@ -75,6 +73,7 @@ class productProjectsEntry extends entry
         $this->setPost('PM', $this->request('PM', ''));
         $this->setPost('model', $this->request('model', 'scrum'));
 
+        $control = $this->loadController('project', 'create');
         $this->requireFields('name,code,begin,end,products');
 
         $control->create($this->request('model', 'scrum'));

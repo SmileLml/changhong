@@ -39,13 +39,10 @@
   .checkbox-inline > label, .checkbox-inline > input {cursor: pointer;}
   .checkbox-primary > label {padding-left: 0;}
   #selected-data-sorter .list-group {padding: 0; margin: 0; list-style: none; overflow: hidden;}
-  #selected-data-sorter .list-group-item {padding: 8px 16px; display: flex; align-items: center; cursor: move; transition: background-color 0.2s ease-in-out;}
+  #selected-data-sorter .list-group-item {padding: 8px 16px; display: flex; align-items: center; transition: background-color 0.2s ease-in-out;}
   #selected-data-sorter .list-group-item > span {flex-grow: 1;}
   #selected-data-sorter .list-group-item:hover {background-color: #eef5ff;}
-  #selected-data-sorter .list-group-item .drag-icon {padding-right: 8px; opacity: 0; transition: opacity 0.2s ease-in-out;}
-  #selected-data-sorter .list-group-item:hover .drag-icon {opacity: 1;}
   #selected-data-sorter .list-group-item::before {content: counter(list-item); counter-increment: list-item; display: inline-block; width: 2ch; padding-right: 28px;}
-  #selected-data-sorter .list-group-item.drag-shadow::before {content: '';}
   #selected-data-sorter .list-group-item .remove-icon {cursor: pointer; padding: 2px;}
   .btn-info {background-color: #E6F0FF !important;}
 
@@ -313,7 +310,7 @@ class SelectedDataSorter extends HTMLDivElement
     window.dataSourceStore.subscribe(this.render.bind(this));
   }
 
-  /* Render sortable list from current selection. */
+  /* Render list from current selection. */
   render()
   {
     this.innerHTML = '';
@@ -328,10 +325,6 @@ class SelectedDataSorter extends HTMLDivElement
       const item = document.createElement('li');
       item.classList.add('list-group-item');
       item.setAttribute('prop', prop);
-
-      const dragIcon = document.createElement('i');
-      dragIcon.classList.add('icon', 'icon-move', 'text-gray', 'drag-icon');
-      item.appendChild(dragIcon);
 
       const [source, propName] = prop.split('.');
       const itemText = document.createElement('span');
@@ -350,19 +343,6 @@ class SelectedDataSorter extends HTMLDivElement
       listView.appendChild(item);
     });
     this.appendChild(listView);
-
-    /* Setup sortable on this list. */
-    $(listView).sortable(
-    {
-      handle: '.list-group-item',
-      finish: () =>
-      {
-        const props = [];
-        for(const item of listView.querySelectorAll('.list-group-item')) props.push(item.getAttribute('prop'));
-        window.dataSourceStore.value = props;
-        window.dataSourceStore.sync();
-      }
-    });
   }
 
   /* Handle attr change, rerender. */

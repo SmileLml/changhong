@@ -1,7 +1,7 @@
 <?php
 $config->installed       = true;
-$config->debug           = false;
-$config->requestType     = 'GET';
+$config->debug           = 6;
+$config->requestType     = 'PATH_INFO';
 $config->timezone        = 'Asia/Shanghai';
 $config->db->driver      = 'mysql';
 $config->db->host        = '127.0.0.1';

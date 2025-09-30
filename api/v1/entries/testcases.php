@@ -2,16 +2,16 @@
 /**
  * The testcases entry point of ZenTaoPMS.
  *
- * @copyright   Copyright 2009-2023 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
+ * @copyright   Copyright 2009-2021 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Chunsheng Wang <chunsheng@cnezsoft.com>
  * @package     entries
  * @version     1
- * @link        https://www.zentao.net
+ * @link        http://www.zentao.net
  */
 class testcasesEntry extends entry
 {
-    /**
+   /**
      * GET method.
      *
      * @param  int    $productID
@@ -33,10 +33,9 @@ class testcasesEntry extends entry
             $param = $moduleID;
         }
 
-        $this->app->cookie->caseModule   = 0;
-        $this->app->cookie->caseSuite    = 0;
-        $this->app->cookie->preBranch    = $branch;
-        $this->app->cookie->onlyAutoCase = 0;
+        $this->app->cookie->caseModule = 0;
+        $this->app->cookie->caseSuite  = 0;
+        $this->app->cookie->preBranch  = $branch;
 
         $control = $this->loadController('testcase', 'browse');
         $control->browse($productID, $this->param('branch', ''), $type, $param, $this->param('caseType', ''), $this->param('order', 'id_desc'), 0, $this->param('limit', 20), $this->param('page', 1));
@@ -74,35 +73,61 @@ class testcasesEntry extends entry
         if(!$productID and isset($this->requestBody->product)) $productID = $this->requestBody->product;
         if(!$productID) return $this->sendError(400, 'Need product id.');
 
-        $control = $this->loadController('testcase', 'create');
+        /*
+        if($_FILES)
+        {
+            foreach($_FILES['files']['name'] as $id => $name)
+            {
+                $extension = pathinfo($name, PATHINFO_EXTENSION);
+                if(stripos(",{$this->config->file->dangers},", ",{$extension},") !== false)
+                {
+                    unset($_FILES['files']['name'][$id]);
+                }
+            }
+        }
+        */
 
-        $fields = 'module,type,stage,story,title,precondition,pri';
+        $fields = 'module,type,stage,story,title,precondition,pri,script';
         $this->batchSetPost($fields);
         $this->setPost('product', $productID);
+        if(isset($this->requestBody->auto)) $this->setPost('auto', 'auto');
+        if(isset($this->requestBody->script)) $this->setPost('auto', 'auto');
 
         /* Set steps and expects. */
+        $steps    = array();
+        $expects  = array();
+        $stepType = array();
         if(isset($this->requestBody->steps))
         {
-            $steps    = array();
-            $expects  = array();
-            $stepType = array();
-            $index    = 1;
-            $useName  = count(array_column($this->requestBody->steps, 'name')) == count($this->requestBody->steps);
             foreach($this->requestBody->steps as $step)
             {
-                $name  = $useName ? $step->name : $index;
-                $type  = isset($step->type) ? $step->type : 'step';
-                $index ++;
+                $type = isset($step->type) ? $step->type : 'step';
 
-                $steps[$name]    = $step->desc;
-                $expects[$name]  = $type == 'group' ? '' : $step->expect;
-                $stepType[$name] = $type;
+                $steps[]    = $step->desc;
+                $expects[]  = $type == 'group' ? '' : $step->expect;
+                $stepType[] = $type;
+            }
+            $this->setPost('steps',    $steps);
+            $this->setPost('expects',  $expects);
+            $this->setPost('stepType', $stepType);
+        }
+        elseif(isset($_POST['steps']))
+        {
+            foreach($_POST['steps'] as $step)
+            {
+                if(is_array($step)) $step = (object)$step;
+                $type = isset($step->type) ? $step->type : 'step';
+
+                $steps[]    = $step->desc;
+                $expects[]  = $type == 'group' ? '' : $step->expect;
+                $stepType[] = $type;
             }
             $this->setPost('steps',    $steps);
             $this->setPost('expects',  $expects);
             $this->setPost('stepType', $stepType);
         }
 
+        $control = $this->loadController('testcase', 'create');
         $this->requireFields('title,type,pri,steps');
 
         $control->create(0);
@@ -114,6 +139,6 @@ class testcasesEntry extends entry
         $case = $this->loadModel('testcase')->getByID($data->id);
         $case->steps = (isset($case->steps) and !empty($case->steps)) ? array_values($case->steps) : array();
 
-        return $this->send(200, $this->format($case, 'openedBy:user,openedDate:time,lastEditedBy:user,lastEditedDate:time,lastRunDate:time,scriptedDate:date,reviewedBy:user,reviewedDate:date,deleted:bool'));
+        return $this->send(200, $this->format($case, 'openedBy:user,openedDate:time,scriptedBy:user,lastRunner:user,lastEditedBy:user,lastEditedDate:time,lastRunDate:time,scriptedDate:date,reviewedBy:user,reviewedDate:date,deleted:bool'));
     }
 }

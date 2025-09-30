@@ -688,7 +688,8 @@ class ai extends control
 
             $originalPrompt = clone $prompt;
 
-            $prompt->targetForm = $data->targetForm;
+            /* Fix bug: targetForm is null. */
+            if(isset($data->targetForm)) $prompt->targetForm = $data->targetForm;
 
             $this->ai->updatePrompt($prompt, $originalPrompt);
 

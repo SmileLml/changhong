@@ -188,6 +188,67 @@ class aiModel extends model
     }
 
     /**
+     * Get access token.
+     *
+     * @param  string $modelType
+     * @access public
+     * @return object
+     */
+    public function getAccessToken($modelType)
+    {
+        $response = new stdclass();
+        $response->result = 'success';
+
+        $clientID     = $this->modelConfig->key;
+        $clientSecret = $this->modelConfig->secret;
+
+        $authURL = sprintf($this->config->ai->$modelType->api->$modelVendor->auth, $clientID, $clientSecret);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $authURL);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        $result = curl_exec($ch);
+        if(!$result || curl_errno($ch))
+        {
+            $response->result  = 'fail';
+            $response->message = curl_error($ch);
+            curl_close($ch);
+            return $response;
+        }
+        $result = json_decode($result);
+        if(json_last_error())
+        {
+            $response->result  = 'fail';
+            $response->message = 'JSON decode error: ' . json_last_error_msg();
+            curl_close($ch);
+            return $response;
+        }
+
+        $response->accessToken = $result->access_token;
+        return $response;
+    }
+
+    /**
+     * Get field lang.
+     *
+     * @param  string $module
+     * @param  string $object
+     * @param  string $field
+     * @access public
+     * @return string
+     */
+    public function getFieldLang($module, $object, $field)
+    {
+        global $lang;
+
+        $hasAILang = isset($lang->ai->dataSource[$module][$object][$field]);
+        $fieldName = $hasAILang ? $lang->ai->dataSource[$module][$object][$field] : $lang->$object->$field;
+
+        return $fieldName;
+    }
+
+    /**
      * Format model config submitted from form for use with `createModel()` and `updateModel()`.
      *
      * @param  object        $model
@@ -441,34 +502,11 @@ class aiModel extends model
         }
         elseif($modelType == 'ernie')
         {
-            $clientID     = $this->modelConfig->key;
-            $clientSecret = $this->modelConfig->secret;
-            $authURL = sprintf($this->config->ai->ernie->api->$modelVendor->auth, $clientID, $clientSecret);
+            $accessTokenRes = $this->getAccessToken($modelType);
+            if($accessTokenRes->result == 'fail') return $accessTokenRes;
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $authURL);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-            $result = curl_exec($ch);
-            if(!$result || curl_errno($ch))
-            {
-                $response = new stdclass();
-                $response->result  = 'fail';
-                $response->message = curl_error($ch);
-                curl_close($ch);
-                return $response;
-            }
-            $result = json_decode($result);
-            if(json_last_error())
-            {
-                $response = new stdclass();
-                $response->result  = 'fail';
-                $response->message = 'JSON decode error: ' . json_last_error_msg();
-                curl_close($ch);
-                return $response;
-            }
-            if(empty($result->access_token)) return (object)array('result' => 'fail', 'message' => $this->lang->ai->models->authFailure);
-            $accessToken = $result->access_token;
+            if(empty($accessTokenRes->accessToken)) return (object)array('result' => 'fail', 'message' => $this->lang->ai->models->authFailure);
+            $accessToken = $accessTokenRes->accessToken;
 
             $url = sprintf($this->config->ai->ernie->api->$modelVendor->format, $accessToken);
         }
@@ -492,20 +530,7 @@ class aiModel extends model
 
         $result = curl_exec($ch);
 
-        if(isset($this->config->debug) && $this->config->debug >= 1)
-        {
-            global $app;
-            $logFile = $app->getLogRoot() . 'saas.' . date('Ymd') . '.log.php';
-            if(!file_exists($logFile)) file_put_contents($logFile, '<?php die(); ?' . '>');
-            $fh = @fopen($logFile, 'a');
-            if($fh)
-            {
-                fwrite($fh, date('Ymd H:i:s') . ": " . $app->getURI() . ' AI Request' . "\n");
-                fwrite($fh, "postData:    " . print_r($data, true) . "\n");
-                fwrite($fh, "results:" . print_r($result, true) . "\n");
-                fclose($fh);
-            }
-        }
+        $this->saveRequestLog($data, $result);
 
         $response = new stdclass();
 
@@ -1861,6 +1886,31 @@ class aiModel extends model
         return empty($schema) ? array() : $schema;
     }
 
+    public function genRuleFunctionCall($prompt)
+    {
+        global $lang;
+
+        $properties = $lang->ai->formSchema['source']->properties;
+
+        $sources = explode(',', trim($prompt->source, ','));
+        foreach($sources as $source)
+        {
+            $fieldItem = explode('.', $source);
+            $object    = $fieldItem[0];
+            $field     = $fieldItem[1];
+
+            $fieldName = $this->getFieldLang($prompt->module, $object, $field);
+            $fieldProperties = clone $lang->ai->source->properties;
+            $fieldProperties->description = sprintf($lang->ai->source->properties->description, $fieldName);
+
+            $properties->$field = $fieldProperties;
+
+            $lang->ai->formSchema['source']->required[] = $field;
+        }
+
+        return $lang->ai->formSchema['source'];
+    }
+
     /**
      * Get object data for prompt by id.
      *
@@ -1948,13 +1998,13 @@ class aiModel extends model
                 /* Check if is plain object, data might contain arrays. */
                 if(is_object($object->$objectName))
                 {
-                    if(isset($object->$objectName->$objectKey)) $objectData->$objectName[$objectKey] = $object->$objectName->$objectKey;
+                    if(property_exists($object->$objectName, $objectKey)) $objectData->$objectName[$objectKey] = $object->$objectName->$objectKey;
                 }
                 elseif(is_array($object->$objectName))
                 {
                     foreach($object->$objectName as $idx => $obj)
                     {
-                        if(isset($obj->$objectKey)) $objectData->$objectName[$idx][$objectKey] = $obj->$objectKey;
+                        if(property_exists($obj, $objectKey)) $objectData->$objectName[$idx][$objectKey] = $obj->$objectKey;
                     }
                 }
             }
@@ -1996,6 +2046,40 @@ class aiModel extends model
         return $newline ? "$sentence\n" : $sentence;
     }
 
+    public function genFieldRules($prompt)
+    {
+        global $lang;
+        $this->loadModel('source');
+
+        $fieldRules     = $lang->ai->ruleTip;
+        $rulesWeightTip = $lang->ai->ruleWeightTip;
+
+        $ruleList         = $this->source->getRulesList($prompt->module);
+        $rulesWeightPairs = $this->source->getWeightPairs($prompt->id);
+
+        $sources = explode(',', trim($prompt->source, ','));
+
+        foreach($sources as $source)
+        {
+            $fieldItem = explode('.', $source);
+            $object    = $fieldItem[0];
+            $field     = $fieldItem[1];
+
+            $fieldName = $this->getFieldLang($prompt->module, $object, $field);
+            if(isset($ruleList[$field]))
+            {
+                $fieldRules .= sprintf($lang->ai->ruleTipFormat, $fieldName, $ruleList[$field]->rules);
+            }
+
+            if(isset($rulesWeightPairs[$field]))
+            {
+                $rulesWeightTip .= sprintf($lang->ai->ruleWeightTipFormat, $fieldName, $rulesWeightPairs[$field]);
+            }
+        }
+
+        return $fieldRules . $rulesWeightTip;
+    }
+
     /**
      * Assemble prompt with prompt data.
      *
@@ -2013,6 +2097,12 @@ class aiModel extends model
 
         $wholePrompt .= static::autoPrependNewline(static::tryPunctuate($prompt->purpose));
         $wholePrompt .= static::autoPrependNewline(static::tryPunctuate($prompt->elaboration, true));
+
+        if(empty($prompt->targetForm))
+        {
+            $self = new self();
+            $wholePrompt .= $self->genFieldRules($prompt);
+        }
 
         return $wholePrompt;
     }
@@ -2052,7 +2142,15 @@ class aiModel extends model
         }
 
         $wholePrompt = static::assemblePrompt($prompt, $dataPrompt);
-        $schema      = $this->getFunctionCallSchema($prompt->targetForm);
+
+        if(empty($prompt->targetForm))
+        {
+            $schema = $this->genRuleFunctionCall($prompt);
+        }
+        else
+        {
+            $schema = $this->getFunctionCallSchema($prompt->targetForm);
+        }
         if(empty($schema)) return -5;
 
         $this->useLanguageModel($prompt->model);
@@ -2909,6 +3007,31 @@ class aiModel extends model
         $this->loadModel('action')->create('aiAssistant', $assistantId, 'deleted');
 
         return true;
+    }
+
+    /**
+     * Save request log.
+     * @param  mixed  $request
+     * @param  mixed  $response
+     * @access public
+     * @return void
+     */
+    public function saveRequestLog($request, $response)
+    {
+        if(isset($this->config->debug) && $this->config->debug >= 1)
+        {
+            global $app;
+            $logFile = $app->getLogRoot() . 'saas.' . date('Ymd') . '.log.php';
+            if(!file_exists($logFile)) file_put_contents($logFile, '<?php die(); ?' . '>');
+            $fh = @fopen($logFile, 'a');
+            if($fh)
+            {
+                fwrite($fh, date('Ymd H:i:s') . ": " . $app->getURI() . ' AI Request' . "\n");
+                fwrite($fh, "postData:    " . print_r($request, true) . "\n");
+                fwrite($fh, "results:" . print_r($response, true) . "\n");
+                fclose($fh);
+            }
+        }
     }
 }
 

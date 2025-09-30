@@ -2,12 +2,12 @@
 /**
  * The products entry point of ZenTaoPMS.
  *
- * @copyright   Copyright 2009-2023 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
+ * @copyright   Copyright 2009-2021 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Chunsheng Wang <chunsheng@cnezsoft.com>
  * @package     entries
  * @version     1
- * @link        https://www.zentao.net
+ * @link        http://www.zentao.net
  */
 class productsEntry extends entry
 {
@@ -26,6 +26,7 @@ class productsEntry extends entry
         if(!$programID) $programID = $this->param('program', 0);
         $projectID     = $this->param('project', 0);
         $mergeChildren = $this->param('mergeChildren', '');
+        $likeName      = $this->param('likeName', '');
 
         if($programID)
         {
@@ -65,7 +66,7 @@ class productsEntry extends entry
             $products = $data->data->productStats;
             if($mergeChildren) $products = $data->data->productStructure;
         }
-        $pager = $data->data->pager;
+        $pager = isset($data->data->pager) ? $data->data->pager : null;
 
         $result = array();
         if($mergeChildren)
@@ -78,6 +79,7 @@ class productsEntry extends entry
             $accounts = array();
             foreach($products as $product)
             {
+                if(!empty($likeName) and stripos($product->name, $likeName) === false) continue;
                 $accounts[$product->PO]        = $product->PO;
                 $accounts[$product->QD]        = $product->QD;
                 $accounts[$product->RD]        = $product->RD;
@@ -96,7 +98,14 @@ class productsEntry extends entry
                 $result[] = $this->format($product, 'createdDate:time,whitelist:userList,createdBy:user,PO:user,RD:user,QD:user');
             }
 
-            $data = array('page' => $pager->pageID, 'total' => $pager->recTotal, 'limit' => $pager->recPerPage, 'products' => $result);
+            if($pager && empty($likeName))
+            {
+                $data = array('page' => $pager->pageID, 'total' => $pager->recTotal, 'limit' => $pager->recPerPage, 'products' => $result);
+            }
+            else
+            {
+                $data = array('products' => $result);
+            }
             $withUser = $this->param('withUser', '');
             if(!empty($withUser)) $data['users'] = $this->loadModel('user')->getListByAccounts($accounts, 'account');
 
@@ -112,17 +121,16 @@ class productsEntry extends entry
      */
     public function post()
     {
-        $control = $this->loadController('product', 'create');
-
         $useCode = $this->checkCodeUsed();
 
         $fields = 'program,line,name,PO,QD,RD,type,desc,whitelist';
         if($useCode) $fields .= ',code';
-
         $this->batchSetPost($fields);
 
         $this->setPost('acl', $this->request('acl', 'private'));
         $this->setPost('whitelist', $this->request('whitelist', array()));
+
+        $control = $this->loadController('product', 'create');
 
         $requireFields = 'name';
         if($useCode) $requireFields .= ',code';

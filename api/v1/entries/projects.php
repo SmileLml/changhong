@@ -2,12 +2,12 @@
 /**
  * The project entry point of ZenTaoPMS.
  *
- * @copyright   Copyright 2009-2023 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
+ * @copyright   Copyright 2009-2021 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Chunsheng Wang <chunsheng@cnezsoft.com>
  * @package     entries
  * @version     1
- * @link        https://www.zentao.net
+ * @link        http://www.zentao.net
  */
 class projectsEntry extends entry
 {
@@ -22,6 +22,7 @@ class projectsEntry extends entry
     {
         if(!$programID) $programID = $this->param('program', 0);
         $appendFields = $this->param('fields', '');
+        $likeName     = $this->param('likeName', '');
         if(stripos(strtolower(",{$appendFields},"), ',dropmenu,') !== false) return $this->getDropMenu();
 
         $_COOKIE['involved'] = $this->param('involved', 0);
@@ -48,13 +49,18 @@ class projectsEntry extends entry
             $result = array();
             foreach($data->data->projectStats as $project)
             {
+                if(!empty($likeName) and stripos($project->name, $likeName) === false) continue;
+
                 $result[] = $this->format($project, 'openedBy:user,openedDate:time,lastEditedBy:user,lastEditedDate:time,closedBy:user,closedDate:time,canceledBy:user,canceledDate:time,realBegan:date,realEnd:date,PM:user,whitelist:userList,deleted:bool');
             }
 
             $data = array();
-            $data['page']     = $pager->pageID;
-            $data['total']    = $pager->recTotal;
-            $data['limit']    = (int)$pager->recPerPage;
+            if(empty($likeName))
+            {
+                $data['page']     = $pager->pageID;
+                $data['total']    = $pager->recTotal;
+                $data['limit']    = (int)$pager->recPerPage;
+            }
             $data['projects'] = $result;
 
             $withUser = $this->param('withUser', '');
@@ -75,16 +81,9 @@ class projectsEntry extends entry
      */
     public function post()
     {
-        $control = $this->loadController('project', 'create');
-
-        $fields = 'name,begin,end,products,multiple';
+        $fields = 'name,begin,end,products,desc,hasProduct';
         $this->batchSetPost($fields);
-
-        $_POST['hasProduct'] = isset($_POST['products']) ? 1 : 0;
-
-        $multiple = $this->request('multiple', '');
-        if($multiple !== '') $this->setPost('multiple', 'on');
-        if($multiple == 'no') $this->setPost('multiple', '');
+        if(isset($_POST['products']) and !isset($_POST['hasProduct'])) $_POST['hasProduct'] = true;
 
         $useCode = $this->checkCodeUsed();
 
@@ -95,6 +94,8 @@ class projectsEntry extends entry
         $this->setPost('PM', $this->request('PM', ''));
         $this->setPost('model', $this->request('model', 'scrum'));
         $this->setPost('parent', $this->request('parent', 0));
+
+        $control = $this->loadController('project', 'create');
 
         $requireFields = 'name,begin,end,products';
         if($useCode) $requireFields .= ',code';

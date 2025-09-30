@@ -2,12 +2,12 @@
 /**
  * The users entry point of ZenTaoPMS.
  *
- * @copyright   Copyright 2009-2023 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
+ * @copyright   Copyright 2009-2021 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.cnezsoft.com)
  * @license     ZPL(http://zpl.pub/page/zplv12.html) or AGPL(https://www.gnu.org/licenses/agpl-3.0.en.html)
  * @author      Chunsheng Wang <chunsheng@cnezsoft.com>
  * @package     entries
  * @version     1
- * @link        https://www.zentao.net
+ * @link        http://www.zentao.net
  */
 class usersEntry extends entry
 {
@@ -24,6 +24,8 @@ class usersEntry extends entry
         $appendFields = $this->param('fileds', '');
         $type         = $this->param('type', 'bydept');
         $limit        = (int)$this->param('limit', 20);
+        $likeAccount  = $this->param('likeAccount', '');
+        $likeRealname = $this->param('likeRealname', '');
 
         $pager = null;
         if($limit)
@@ -34,9 +36,14 @@ class usersEntry extends entry
 
         $users = $this->loadModel('company')->getUsers($this->param('browse', 'inside'), $type, 0, 0, $this->param('order', 'id_desc'), $pager);
         $result = array();
+        $this->loadModel('group');
         foreach($users as $user)
         {
+            if(!empty($likeAccount)  and stripos($user->account, $likeAccount) === false) continue;
+            if(!empty($likeRealname) and stripos($user->realname, $likeRealname) === false) continue;
+
             $user = $this->filterFields($user, 'id,dept,account,realname,role,pinyin,email,' . $appendFields);
+            $user->group = $this->group->getByAccount($user->account);
             $result[] = $this->format($user, 'locked:time');
         }
 
@@ -55,12 +62,10 @@ class usersEntry extends entry
      */
     public function post()
     {
-        $control = $this->loadController('user', 'create');
-
         $fields = 'type,dept,account,password,visions,realname,join,role,email,commiter,gender,group,passwordStrength';
         $this->batchSetPost($fields);
 
-        if(!in_array($this->request('gender', zget($_POST, 'gender', 'f')), array('f', 'm'))) return $this->sendError(400, "The value of gender must be 'f' or 'm'");
+        if(!in_array($this->request('gendar', zget($_POST, 'gendar', 'f')), array('f', 'm'))) return $this->sendError(400, "The value of gendar must be 'f' or 'm'");
 
         $password = $this->request('password', zget($_POST, 'password', '')) ? md5($this->request('password', zget($_POST, 'password', ''))) : '';
 
@@ -68,15 +73,15 @@ class usersEntry extends entry
         if(!is_array($visions)) $visions = explode(',', $visions);
 
         if($this->request('group')) $this->setPost('group', explode(',', $this->request('group')));
-        $this->setPost('password1', $password . $this->app->session->rand);
-        $this->setPost('password2', $password . $this->app->session->rand);
+        $this->setPost('password1', $password);
+        $this->setPost('password2', $password);
         $this->setPost('passwordStrength', 3);
         $this->setPost('visions', $visions);
         $this->setPost('verifyPassword', md5($this->app->user->password . $this->app->session->rand));
-        $this->setPost('passwordLength', strlen($_POST['password1']));
         unset($_POST['password']);
 
-        $this->requireFields('account,gender,password1,realname');
+        $control = $this->loadController('user', 'create');
+        $this->requireFields('account,password1,realname');
 
         $control->create();
 
@@ -85,7 +90,11 @@ class usersEntry extends entry
         if(isset($data->result) and !isset($data->id)) return $this->sendError(400, $data->message);
 
         $user = $this->loadModel('user')->getByID($data->id, 'id');
-        unset($user->password);
+        if($user)
+        {
+            $user->group = $this->loadModel('group')->getByAccount($user->account);
+            unset($user->password);
+        }
 
         return $this->send(201, $this->format($user, 'last:time,locked:time'));
     }
