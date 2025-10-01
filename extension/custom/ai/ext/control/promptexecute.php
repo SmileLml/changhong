@@ -48,12 +48,6 @@ class myAI extends ai
         if(is_int($response)) return $this->send(array('result' => 'fail', 'message' => sprintf($this->lang->ai->execute->failFormat, $this->lang->ai->execute->executeErrors["$response"]) . (empty($this->ai->errors) ? '' : implode(', ', $this->ai->errors))));
         if(empty($response))  return $this->send(array('result' => 'fail', 'message' => sprintf($this->lang->ai->execute->failFormat, $this->lang->ai->execute->failReasons['noResponse'])));
 
-        if(empty($prompt->targetForm))
-        {
-            // TODO 保存逻辑 response {"name":15,"pri":15,"left":10,"progress":5,"estimate":10,"estStarted":0,"realStarted":0}
-            return;
-        }
-
         $this->ai->setInjectData($prompt->targetForm, $response);
 
         $_SESSION['aiPrompt']['prompt']   = $prompt;

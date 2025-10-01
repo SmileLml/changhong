@@ -531,6 +531,36 @@ class control extends baseControl
         }
         return $this->loadModel('flow')->buildFormFields($fields, $fieldList, array(), $object);
     }
+
+    public function appendAiWeightFields($fields, $moduleName = '', $methodName = '')
+    {
+        $moduleName = $moduleName ? $moduleName : $this->app->rawModule;
+        $methodName = $methodName ? $methodName : $this->app->rawMethod;
+        $this->loadModel('ai');
+        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $fields;
+        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if(empty($weightFields)) return $fields;
+        $rules = $this->ai->getRulesByObjectType($moduleName);
+        foreach($fields->fields as $key => $item)
+        {
+            if(isset($weightFields["$moduleName.$key"]) && floatval($weightFields["$moduleName.$key"]) > 0)
+            {
+                $weightText = sprintf('%.2f', floatval($weightFields["$moduleName.$key"]));
+                $labelControl = array();
+                $labelControl['control'] = 'text';
+                $labelControl['class']   = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
+                $labelControl['text']    = $weightText;
+                if(!empty($rules->$key))
+                {
+                    $labelControl['zui-toggle'] = 'tooltip';
+                    $labelControl['zui-toggle-tooltip'] = json_encode(array('title' => $rules->$key, 'className' => 'text-gray border border-gray-300', 'type' =>'white', 'placement' => 'right'));
+                }
+                $fields->field($key)->labelControl($labelControl);
+            }
+        }
+        return $fields;
+    }
+
     /**
      * 追加工作流配置的js和css到页面上。
      * append workflow js and css to form.

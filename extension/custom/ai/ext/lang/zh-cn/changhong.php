@@ -12,16 +12,16 @@ $lang->ai->targetForm['other']['common']      = '其他';
 $lang->ai->targetForm['other']['score']       = '评分';
 $lang->ai->targetForm['other']['remarkscore'] = '备注评分';
 
-$lang->ai->ratingRules = new stdclass();
+$lang->ai->ratingRules         = new stdclass();
 $lang->ai->ratingRules->common = "AI评分规则";
 
-$lang->ai->ratingRules->category = array();
+$lang->ai->ratingRules->category                = array();
 $lang->ai->ratingRules->category['requirement'] = '用户需求';
 $lang->ai->ratingRules->category['story']       = '研发需求';
 $lang->ai->ratingRules->category['task']        = '任务';
 $lang->ai->ratingRules->category['bug']         = 'Bug';
 
-$lang->ai->ratingRules->remark  =array();
+$lang->ai->ratingRules->remark                 = array();
 $lang->ai->ratingRules->remark['totalRemark']  = '整体备注';
 $lang->ai->ratingRules->remark['singleRemark'] = '单条备注';
 
@@ -30,16 +30,16 @@ $lang->ai->storyRatingRule       = '研发需求评分';
 $lang->ai->taskRatingRule        = '任务评分';
 $lang->ai->bugRatingRule         = 'Bug评分';
 
-$lang->ai->formSchema['source'] = new stdclass();
-$lang->ai->formSchema['source']->title      = '评分';
-$lang->ai->formSchema['source']->type       = 'object';
-$lang->ai->formSchema['source']->properties = new stdclass();
-$lang->ai->formSchema['source']->required   = array();
+$lang->ai->formSchema['score'] = new stdclass();
+$lang->ai->formSchema['score']->title      = '评分';
+$lang->ai->formSchema['score']->type       = 'object';
+$lang->ai->formSchema['score']->properties = new stdclass();
+$lang->ai->formSchema['score']->required   = array();
 
-$lang->ai->source = new stdclass();
-$lang->ai->source->properties = new stdclass();
-$lang->ai->source->properties->type        = 'number';
-$lang->ai->source->properties->description = "%s评分";
+$lang->ai->score = new stdclass();
+$lang->ai->score->properties = new stdclass();
+$lang->ai->score->properties->type        = 'number';
+$lang->ai->score->properties->description = "%s评分";
 
 $lang->ai->dataSourceWeightError = '权重之和需等于100% / 0%';
 
@@ -57,27 +57,27 @@ $lang->ai->dataSource['requirement']['requirement']['estimate'] = '预计工时'
 $lang->ai->dataSource['story']['common']          = '研发需求';
 $lang->ai->dataSource['story']['story']['common'] = '研发需求';
 
-$lang->ai->dataSourceExtend = array();
+$lang->ai->dataSourceExtend              = array();
 $lang->ai->dataSourceExtend['remark']    = '最新备注';
 $lang->ai->dataSourceExtend['remarkAll'] = '整体备注';
 
 $lang->ai->prompts->modules['story']       = '研发需求';
 $lang->ai->prompts->modules['requirement'] = '用户需求';
 
-$lang->ai->designStepNav = array();
-$lang->ai->designStepNav['assignrole']        = '指定角色';
-$lang->ai->designStepNav['selectdatasource']  = '选择对象';
-$lang->ai->designStepNav['setpurpose']        = '确认操作';
-$lang->ai->designStepNav['settriggeraction']  = '触发动作';
-$lang->ai->designStepNav['settargetform']     = '结果处理';
-$lang->ai->designStepNav['finalize']          = '准备发布';
+$lang->ai->designStepNav                     = array();
+$lang->ai->designStepNav['assignrole']       = '指定角色';
+$lang->ai->designStepNav['selectdatasource'] = '选择对象';
+$lang->ai->designStepNav['setpurpose']       = '确认操作';
+$lang->ai->designStepNav['settriggeraction'] = '触发动作';
+$lang->ai->designStepNav['settargetform']    = '结果处理';
+$lang->ai->designStepNav['finalize']         = '准备发布';
 
 $lang->ai->promptSetTriggerAction = '触发动作';
 
 $lang->ai->prompts->setTriggerAction    = '选择动作';
 $lang->ai->prompts->setTriggerActionTip = '选择后，可以在完成动作时，请求大语言模型';
 
-$lang->ai->triggerAction = array();
+$lang->ai->triggerAction                                  = array();
 $lang->ai->triggerAction['requirement']['common']         = '用户需求';
 $lang->ai->triggerAction['story']['common']               = '研发需求';
 $lang->ai->triggerAction['productplan']['common']         = '计划';

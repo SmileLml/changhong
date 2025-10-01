@@ -6,10 +6,10 @@ public function ratingRules($objectType, $data)
     foreach($data as $field => $value)
     {
         $date = date('Y-m-d H:i:s');
-        $hasData = $this->dao->select('*')->from('zt_source_rules')->where('objectType')->eq($objectType)->andWhere('field')->eq($field)->fetch();
+        $hasData = $this->dao->select('*')->from(TABLE_AISCORE_RULES)->where('objectType')->eq($objectType)->andWhere('field')->eq($field)->fetch();
         if(!empty($hasData))
         {
-            $this->dao->update('zt_source_rules')
+            $this->dao->update(TABLE_AISCORE_RULES)
                 ->set('rules')->eq($value)
                 ->set('editDate')->eq($date)
                 ->where('objectType')->eq($objectType)
@@ -22,7 +22,7 @@ public function ratingRules($objectType, $data)
             $rules->field      = $field;
             $rules->rules      = $value;
             $rules->editDate   = $date;
-            $this->dao->insert('zt_source_rules')->data($rules)->exec();
+            $this->dao->insert(TABLE_AISCORE_RULES)->data($rules)->exec();
         }
     }
     return dao::isError() ? false : $this->dao->lastInsertID();
@@ -30,13 +30,32 @@ public function ratingRules($objectType, $data)
 
 public function getRulesByObjectType($objectType)
 {
-    $data =  $this->dao->select('*')->from('zt_source_rules')->where('objectType')->eq($objectType)->fetchAll();
+    $data =  $this->dao->select('*')->from(TABLE_AISCORE_RULES)->where('objectType')->eq($objectType)->fetchAll();
     $rules = new stdclass();
     foreach($data as $rule)
     {
         $rules->{$rule->field} = $rule->rules;
     }
     return $rules;
+}
+
+/**
+ * Get prompt by module.
+ *
+ * @access public
+ * @return int
+ */
+public function getPromptByModule()
+{
+    global $app;
+
+    $triggerControl = $app->moduleName . '.' . $app->methodName;
+
+    return $this->dao->select('*')->from(TABLE_AI_PROMPT)
+        ->where('status')->eq('active')
+        ->andWhere("FIND_IN_SET('{$triggerControl}', triggerControl)")
+        ->orderBy('id_desc')
+        ->fetch();
 }
 
 /**
@@ -92,7 +111,7 @@ public function updatePrompt($prompt, $originalPrompt = null)
 
     if(!empty($weights))
     {
-        $this->dao->delete()->from(TABLE_SOURCE_WEIGHT)->where('promptID')->eq($prompt->id)->exec();
+        $this->dao->delete()->from(TABLE_AISCORE_WEIGHT)->where('promptID')->eq($prompt->id)->exec();
         if(!empty($prompt->source))
         {
             $sources = explode(',', trim($prompt->source, ','));
@@ -106,7 +125,7 @@ public function updatePrompt($prompt, $originalPrompt = null)
                 $data->weight     = $weight;
                 $data->createBy   = $this->app->user->account;
                 $data->createDate = $now;
-                $this->dao->insert(TABLE_SOURCE_WEIGHT)->data($data)->exec();
+                $this->dao->insert(TABLE_AISCORE_WEIGHT)->data($data)->exec();
             }
         }
     }
@@ -118,15 +137,15 @@ public function updatePrompt($prompt, $originalPrompt = null)
 }
 
 /**
- * Get source weights of a prompt.
+ * Get score weights of a prompt.
  *
  * @param  int    $promptID
  * @access public
  * @return object
  */
-public function getSourceWeights($promptID)
+public function getScoreWeights($promptID)
 {
-    return $this->dao->select('*')->from(TABLE_SOURCE_WEIGHT)->where('promptID')->eq($promptID)->fetchAll('field');
+    return $this->dao->select('*')->from(TABLE_AISCORE_WEIGHT)->where('promptID')->eq($promptID)->fetchAll('field');
 }
 
 /**
@@ -220,4 +239,32 @@ public function getLastActiveStep($prompt)
         if(!empty($prompt->source))         return 'selectdatasource';
     }
     return 'assignrole';
+}
+
+/**
+ * Get weight fields of a prompt.
+ *
+ * @param  string $moduleName
+ * @param  string $methodName
+ * @access public
+ * @return array
+ */
+public function getWeightFields($moduleName, $methodName)
+{
+    $prompt = $this->dao->select('id,source')
+        ->from(TABLE_AI_PROMPT)
+        ->where('status')->eq('active')
+        ->andWhere('deleted')->eq('0')
+        ->andWhere('triggerControl')->like("%,$moduleName.$methodName,%")
+        ->orderBy('id_desc')
+        ->fetch();
+
+    if(!$prompt) return array();
+
+    $weightFields = $this->dao->select('field,weight')
+        ->from(TABLE_AISCORE_WEIGHT)
+        ->where('promptID')->eq($prompt->id)
+        ->fetchPairs('field', 'weight');
+
+    return !empty($weightFields) ? $weightFields : array();
 }

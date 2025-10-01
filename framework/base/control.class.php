@@ -1100,6 +1100,18 @@ class baseControl
 
         $data = (array)$data;
 
+        /* If the operation on the object itself is successful but the AI scoring fails, AI scoring prompt will be displayed */
+        if(isset($data['result']) && $data['result'] == 'success')
+        {
+            if(isset($_SESSION['aiError']) && !empty($_SESSION['aiError']))
+            {
+                $data['result']  = 'fail';
+                $data['message'] = $_SESSION['aiError'];
+
+                unset($_SESSION['aiError']);
+            }
+        }
+
         /* Make sure locate in this tab. */
         global $lang;
         $moduleName = $this->app->rawModule;

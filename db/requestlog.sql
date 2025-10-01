@@ -13,3 +13,6 @@ CREATE TABLE IF NOT EXISTS `zt_requestlog` (
   `purpose` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
+
+INSERT INTO `zt_cron` (`m`,`h`,`dom`,`mon`,`dow`,`command`,`remark`,`type`,`status`) VALUES('0','0','1','*/3','*','moduleName=requestlog&methodName=delete','删除过期AI日志','zentao','normal');
+

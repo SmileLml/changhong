@@ -13,7 +13,7 @@
 
 <?php js::set('dataSource', $dataSource);?>
 <?php js::set('dataSourceLang', $lang->ai->dataSource);?>
-<?php js::set('sourceWeights', $sourceWeights);?>
+<?php js::set('scoreWeights', $scoreWeights);?>
 
 <style>
   .center-wrapper {display: flex; justify-content: center; height: 100%;}
@@ -325,7 +325,7 @@ class SelectedDataSorter extends HTMLDivElement
     listView.classList.add('list-group');
     const group = this.getAttribute('group');
     const props = window.dataSourceStore.value;
-    const sourceWeights = window.sourceWeights || {};
+    const scoreWeights = window.scoreWeights || {};
 
     props.forEach(prop =>
     {
@@ -349,7 +349,7 @@ class SelectedDataSorter extends HTMLDivElement
         inputField.type = 'text';
         inputField.classList.add('form-control', 'input-sm', 'input-field');
         let defaultValue = '0.00';
-        if(sourceWeights && sourceWeights[prop]) defaultValue = parseFloat(sourceWeights[prop].weight).toFixed(2);
+        if(scoreWeights && scoreWeights[prop]) defaultValue = parseFloat(scoreWeights[prop].weight).toFixed(2);
         inputField.value = this.inputValues.get(prop) || defaultValue;
         inputField.addEventListener('change', () => {
           this.inputValues.set(prop, inputField.value);

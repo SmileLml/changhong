@@ -31,17 +31,17 @@ class myAI extends ai
 
             return $this->send(array('result' => 'success', 'message' => $this->lang->saveSuccess, 'locate' => $this->inlink('promptSelectDataSource', "promptID=$promptID") . '#app=admin'));
         }
-        $sourceWeights = $this->ai->getSourceWeights($promptID);
+        $scoreWeights             = $this->ai->getScoreWeights($promptID);
         $prompt->datasourceweight = 0.00;
-        foreach($sourceWeights as $sourceWeight)
+        foreach($scoreWeights as $sourceWeight)
         {
-            $prompt->datasourceweight += (float)$sourceWeight->weight;
+            $prompt->datasourceweight += (float) $sourceWeight->weight;
         }
-        $prompt->datasourceweight = round($prompt->datasourceweight, 2);
+        $prompt->datasourceweight     = round($prompt->datasourceweight, 2);
         $this->view->activeDataSource = empty($prompt->module) ? current(array_keys($this->config->ai->dataSource)) : $prompt->module;
         $this->view->dataSource       = $this->ai->getDataSource();
         $this->view->prompt           = $prompt;
-        $this->view->sourceWeights    = $sourceWeights;
+        $this->view->scoreWeights     = $scoreWeights;
         $this->view->promptID         = $promptID;
         $this->view->lastActiveStep   = $this->ai->getLastActiveStep($prompt);
         $this->view->title            = "{$this->lang->ai->prompts->common}#{$prompt->id} $prompt->name {$this->lang->hyphen} " . $this->lang->ai->prompts->selectDataSource . " {$this->lang->hyphen} " . $this->lang->ai->prompts->common;

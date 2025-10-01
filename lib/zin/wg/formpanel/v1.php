@@ -158,6 +158,7 @@ class formPanel extends panel
             global $app;
             list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
             $fields = $app->control->appendExtendFields($fields, $moduleName, $methodName, $this->getData());
+            $fields = $app->control->appendAiWeightFields($fields, $moduleName, $methodName);
             $this->setProp('fields', $fields);
         }
 
@@ -418,7 +419,7 @@ class formPanel extends panel
             setClass('panel-body ' . $this->prop('bodyClass')),
             set($this->prop('bodyProps')),
             $this->buildContainer($this->buildForm()),
-            html($app->control->appendExtendCssAndJS($moduleName, $methodName, $this->getData()))
+            html($app->control->appendExtendCssAndJS($moduleName, $methodName, $this->getData()) . "<style>.ai-weight{border: 1px solid #3883fb !important; color: #3883fb !important;background-color: rgba(56, 131, 251, 0.1) !important;border-radius: 4px !important;padding: 2px 6px !important;font-weight: 500 !important;}</style>" )
         );
     }
 }

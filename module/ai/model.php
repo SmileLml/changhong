@@ -56,15 +56,15 @@ class aiModel extends model
         {
             if($object->enabled == '0') return false;
         }
-        elseif (strtolower($action) === 'assistantpublish')
+        elseif(strtolower($action) === 'assistantpublish')
         {
             if($object->enabled == '1') return false;
         }
-        elseif (strtolower($action) === 'assistantwithdraw')
+        elseif(strtolower($action) === 'assistantwithdraw')
         {
             if($object->enabled == '0') return false;
         }
-        elseif (strtolower($action) === 'assistantedit')
+        elseif(strtolower($action) === 'assistantedit')
         {
             if($object->enabled == '1') return false;
         }
@@ -101,7 +101,7 @@ class aiModel extends model
     private function useLanguageModel($modelID)
     {
         if(!empty($modelID)) $model = $this->getLanguageModel($modelID, true);
-        if(empty($model))    $model = $this->getDefaultLanguageModel();
+        if(empty($model)) $model = $this->getDefaultLanguageModel();
         if(empty($model)) return false;
 
         return $this->setModelConfig($model);
@@ -196,7 +196,7 @@ class aiModel extends model
      */
     public function getAccessToken($modelType)
     {
-        $response = new stdclass();
+        $response         = new stdclass();
         $response->result = 'success';
 
         $clientID     = $this->modelConfig->key;
@@ -266,7 +266,7 @@ class aiModel extends model
             $credentials->$credKey = $model->$credKey;
         }
 
-        $modelConfig = new stdclass();
+        $modelConfig              = new stdclass();
         $modelConfig->name        = $model->name;
         $modelConfig->desc        = $model->description;
         $modelConfig->type        = $model->type;
@@ -276,9 +276,9 @@ class aiModel extends model
 
         if(!empty($model->proxyType) && !empty($model->proxyAddr))
         {
-            $proxy = new stdclass();
-            $proxy->type = $model->proxyType;
-            $proxy->addr = $model->proxyAddr;
+            $proxy              = new stdclass();
+            $proxy->type        = $model->proxyType;
+            $proxy->addr        = $model->proxyAddr;
             $modelConfig->proxy = json_encode($proxy);
         }
         else
@@ -298,7 +298,7 @@ class aiModel extends model
      */
     public function unserializeModel($model)
     {
-        $modelConfig = new stdclass();
+        $modelConfig          = new stdclass();
         $modelConfig->id      = $model->id;
         $modelConfig->name    = $model->name;
         $modelConfig->type    = $model->type;
@@ -362,7 +362,7 @@ class aiModel extends model
         if(!$currentModel) return false;
 
         $model->enabled = $currentModel->enabled;
-        $modelConfig = $this->serializeModel($model);
+        $modelConfig    = $this->serializeModel($model);
         if(!$modelConfig) return false;
 
         $modelConfig->editedDate = helper::now();
@@ -377,7 +377,7 @@ class aiModel extends model
         {
             $this->dao->update(TABLE_IM_CHAT)
                 ->set('name')->eq($model->name)
-                ->where('gid')->like( "%&ai-$modelID")
+                ->where('gid')->like("%&ai-$modelID")
                 ->exec();
         }
 
@@ -403,7 +403,7 @@ class aiModel extends model
 
         $this->dao->update(TABLE_IM_CHAT)
             ->set('archiveDate')->eq(empty($enabled) ? helper::now() : null)
-            ->where('gid')->like( "%&ai-$modelID")
+            ->where('gid')->like("%&ai-$modelID")
             ->exec();
 
         return !dao::isError();
@@ -427,7 +427,7 @@ class aiModel extends model
 
         $this->dao->update(TABLE_IM_CHAT)
             ->set('dismissDate')->eq(helper::now())
-            ->where('gid')->like( "%&ai-$modelID")
+            ->where('gid')->like("%&ai-$modelID")
             ->exec();
 
         $this->dao->update(TABLE_AI_ASSISTANT)
@@ -450,8 +450,8 @@ class aiModel extends model
         $this->useLanguageModel($modelID);
         if($this->config->ai->models[$this->modelConfig->type] == 'ernie' || $this->modelConfig->vendor == 'azure' || $this->modelConfig->type == 'openai-gpt4' || $this->modelConfig->vendor == 'openaiCompatible')
         {
-            $messages = array((object)array('role' => 'user', 'content' => 'test'));
-            $result = $this->converse($modelID, $messages, array('maxTokens' => 1));
+            $messages = array((object) array('role' => 'user', 'content' => 'test'));
+            $result   = $this->converse($modelID, $messages, array('maxTokens' => 1));
         }
         else
         {
@@ -505,7 +505,7 @@ class aiModel extends model
             $accessTokenRes = $this->getAccessToken($modelType);
             if($accessTokenRes->result == 'fail') return $accessTokenRes;
 
-            if(empty($accessTokenRes->accessToken)) return (object)array('result' => 'fail', 'message' => $this->lang->ai->models->authFailure);
+            if(empty($accessTokenRes->accessToken)) return (object) array('result' => 'fail', 'message' => $this->lang->ai->models->authFailure);
             $accessToken = $accessTokenRes->accessToken;
 
             $url = sprintf($this->config->ai->ernie->api->$modelVendor->format, $accessToken);
@@ -524,7 +524,7 @@ class aiModel extends model
         /* Use proxy if proxy is set. */
         if(!empty($this->modelConfig->proxyType) && !empty($this->modelConfig->proxyAddr))
         {
-            curl_setopt($ch, CURLOPT_PROXY,     $this->modelConfig->proxyAddr);
+            curl_setopt($ch, CURLOPT_PROXY, $this->modelConfig->proxyAddr);
             curl_setopt($ch, CURLOPT_PROXYTYPE, static::getProxyType($this->modelConfig->proxyType));
         }
 
@@ -546,7 +546,7 @@ class aiModel extends model
         }
         else
         {
-            $response->result = 'success';
+            $response->result  = 'success';
             $response->content = $result;
         }
 
@@ -609,7 +609,7 @@ class aiModel extends model
         $modelName = $this->config->ai->$modelType->model->$type;
         if(is_array($modelName)) $modelName = $modelName[$this->modelConfig->type];
 
-        $postData = new stdclass();
+        $postData        = new stdclass();
         $postData->model = $modelName;
 
         $data = static::standardizeParams($data);
@@ -653,7 +653,7 @@ class aiModel extends model
             {
                 function json_last_error_msg()
                 {
-                    switch (json_last_error())
+                    switch(json_last_error())
                     {
                         case JSON_ERROR_DEPTH:
                             return 'Maximum stack depth exceeded';
@@ -858,10 +858,16 @@ class aiModel extends model
         /* Filter system message out for ERNIE. */
         if($this->config->ai->models[$this->modelConfig->type] == 'ernie')
         {
-            $systemMessage = current(array_filter($messages, function($message) { return $message->role == 'system'; }));
+            $systemMessage = current(array_filter($messages, function ($message)
+            {
+                return $message->role == 'system';
+            }));
             if(!empty($systemMessage)) $options['system'] = $systemMessage->content;
 
-            $messages = array_values(array_filter($messages, function($message) { return $message->role == 'assistant' || $message->role == 'user'; }));
+            $messages = array_values(array_filter($messages, function ($message)
+            {
+                return $message->role == 'assistant' || $message->role == 'user';
+            }));
         }
 
         $data = compact('messages');
@@ -901,8 +907,8 @@ class aiModel extends model
     {
         if(empty($this->modelConfig) && !$this->useLanguageModel($model)) return false;
 
-        $functions    = array((object)array('name' => 'function', 'parameters' => $schema));
-        $functionCall = (object)array('name' => 'function');
+        $functions    = array((object) array('name' => 'function', 'parameters' => $schema));
+        $functionCall = (object) array('name' => 'function');
 
         $data = compact('messages', 'functions', 'functionCall');
 
@@ -953,8 +959,8 @@ class aiModel extends model
         if(empty($chatMessage)) return false;
 
         /* Second conversation for JSON output. */
-        $messages  = array_merge($this->lang->ai->engineeredPrompts->askForFunctionCalling, array((object)array('role' => 'user', 'content' => $chatMessage)));
-        $functions = array((object)array('name' => 'function', 'description' => 'function', 'parameters' => $schema));
+        $messages  = array_merge($this->lang->ai->engineeredPrompts->askForFunctionCalling, array((object) array('role' => 'user', 'content' => $chatMessage)));
+        $functions = array((object) array('name' => 'function', 'description' => 'function', 'parameters' => $schema));
 
         $data = compact('messages', 'functions');
         if(!empty($options))
@@ -996,7 +1002,7 @@ class aiModel extends model
      */
     public function countLatestMiniPrograms()
     {
-        return (int)$this->dao->select('COUNT(1) AS count')
+        return (int) $this->dao->select('COUNT(1) AS count')
             ->from(TABLE_AI_MINIPROGRAM)
             ->where('deleted')->eq('0')
             ->andWhere('published')->eq('1')
@@ -1015,11 +1021,11 @@ class aiModel extends model
      */
     public function saveMiniProgramMessage($appID, $type, $content)
     {
-        $message = new stdClass();
-        $message->appID = $appID;
-        $message->user = $this->app->user->id;
-        $message->type = $type;
-        $message->content = $content;
+        $message              = new stdClass();
+        $message->appID       = $appID;
+        $message->user        = $this->app->user->id;
+        $message->type        = $type;
+        $message->content     = $content;
         $message->createdDate = helper::now();
 
         $this->dao->insert(TABLE_AI_MESSAGE)
@@ -1069,7 +1075,7 @@ class aiModel extends model
         foreach($messages as $message)
         {
             $message->createdDate = date('Y/n/j G:i', strtotime($message->createdDate));
-            $messageIDs[] = $message->id;
+            $messageIDs[]         = $message->id;
         }
         $this->deleteHistoryMessagesByID($appID, $this->app->user->id, $messageIDs);
 
@@ -1092,7 +1098,7 @@ class aiModel extends model
             ->fetchAll('id', false);
         if(!$sort) return $miniPrograms;
 
-        $sortIDs = array_flip($ids);
+        $sortIDs        = array_flip($ids);
         $sortedPrograms = array();
         foreach($miniPrograms as $program) $sortedPrograms[$sortIDs[$program->id]] = $program;
         ksort($sortedPrograms);
@@ -1215,13 +1221,13 @@ class aiModel extends model
         {
             if(is_string($value))
             {
-                $category = new stdClass();
+                $category          = new stdClass();
                 $category->module  = 'ai';
                 $category->section = 'miniProgram';
                 $category->owner   = 'system';
                 $category->vision  = '';
-                $category->key   = $key;
-                $category->value = $value;
+                $category->key     = $key;
+                $category->value   = $value;
 
                 $this->dao->insert(TABLE_CONFIG)
                     ->data($category)
@@ -1235,7 +1241,7 @@ class aiModel extends model
                 $value = array_filter($value);
                 foreach($value as $v)
                 {
-                    $category = new stdClass();
+                    $category          = new stdClass();
                     $category->module  = 'ai';
                     $category->section = 'miniProgram';
                     $category->owner   = 'system';
@@ -1307,7 +1313,7 @@ class aiModel extends model
 
         foreach($users as $user)
         {
-            $data = new stdClass();
+            $data              = new stdClass();
             $data->appID       = $appID;
             $data->user        = $user;
             $data->type        = 'ntf';
@@ -1337,12 +1343,12 @@ class aiModel extends model
      */
     public function publishMiniProgram($appID, $published = '1')
     {
-        $data = new stdClass();
+        $data            = new stdClass();
         $data->published = $published;
         if($published === '1')
         {
             $data->publishedDate = helper::now();
-            $miniProgram = $this->getMiniProgramByID($appID);
+            $miniProgram         = $this->getMiniProgramByID($appID);
             if(!empty($miniProgram->publishedDate))
             {
                 $this->createNewVersionNotification($appID);
@@ -1381,9 +1387,9 @@ class aiModel extends model
             return !dao::isError();
         }
 
-        $data = new stdClass();
-        $data->appID = $appID;
-        $data->userID = $userID;
+        $data              = new stdClass();
+        $data->appID       = $appID;
+        $data->userID      = $userID;
         $data->createdDate = helper::now();
 
         $this->dao->insert(TABLE_AI_MINIPROGRAMSTAR)
@@ -1423,13 +1429,13 @@ class aiModel extends model
     public function createMiniProgram($data = null)
     {
         if(empty($data)) $data = fixer::input('post')->get();
-        if(!isset($data->editedBy))    $data->editedBy    = $this->app->user->account;
-        if(!isset($data->editedDate))  $data->editedDate  = helper::now();
-        if(!isset($data->published))   $data->published   = '0';
-        if(!isset($data->createdBy))   $data->createdBy   = $this->app->user->account;
+        if(!isset($data->editedBy)) $data->editedBy = $this->app->user->account;
+        if(!isset($data->editedDate)) $data->editedDate = helper::now();
+        if(!isset($data->published)) $data->published = '0';
+        if(!isset($data->createdBy)) $data->createdBy = $this->app->user->account;
         if(!isset($data->createdDate)) $data->createdDate = helper::now();
-        if(!isset($data->prompt))      $data->prompt      = $this->lang->ai->miniPrograms->field->default[3];
-        if($data->published === '1')   $data->publishedDate = helper::now();
+        if(!isset($data->prompt)) $data->prompt = $this->lang->ai->miniPrograms->field->default[3];
+        if($data->published === '1') $data->publishedDate = helper::now();
         $data->builtIn = '0';
 
         $data->model = (empty($data->model) || $data->model == 'default') ? 0 : $data->model;
@@ -1454,12 +1460,12 @@ class aiModel extends model
 
         if(!isset($fields))
         {
-            $defaultFields = $this->lang->ai->miniPrograms->field->default;
-            $fieldData = new stdClass();
+            $defaultFields     = $this->lang->ai->miniPrograms->field->default;
+            $fieldData         = new stdClass();
             $fieldData->fields = array();
             for($i = 0; $i < 3; $i++)
             {
-                $field = new stdClass();
+                $field               = new stdClass();
                 $field->appID        = $appID;
                 $field->name         = $defaultFields[$i];
                 $field->type         = 'text';
@@ -1472,7 +1478,7 @@ class aiModel extends model
         }
         else
         {
-            $fieldData = new stdClass();
+            $fieldData         = new stdClass();
             $fieldData->fields = $fields;
             foreach($fields as $field)
             {
@@ -1521,7 +1527,7 @@ class aiModel extends model
         $fields = $data->fields;
         foreach($fields as $field)
         {
-            $field = (array)$field;
+            $field = (array) $field;
             if(isset($field['options']) && is_array($field['options'])) $field['options'] = implode(',', $field['options']);
             $this->dao->insert(TABLE_AI_MINIPROGRAMFIELD)
                 ->data($field)
@@ -1895,7 +1901,7 @@ class aiModel extends model
     {
         global $lang;
 
-        $properties = $lang->ai->formSchema['source']->properties;
+        $properties = $lang->ai->formSchema['score']->properties;
 
         $sources = explode(',', trim($prompt->source, ','));
         foreach($sources as $source)
@@ -1905,15 +1911,16 @@ class aiModel extends model
             $field     = $fieldItem[1];
 
             $fieldName = $this->getFieldLang($prompt->module, $object, $field);
-            $fieldProperties = clone $lang->ai->source->properties;
-            $fieldProperties->description = sprintf($lang->ai->source->properties->description, $fieldName);
+
+            $fieldProperties = clone $lang->ai->score->properties;
+            $fieldProperties->description = sprintf($lang->ai->score->properties->description, $fieldName);
 
             $properties->$field = $fieldProperties;
 
-            $lang->ai->formSchema['source']->required[] = $field;
+            $lang->ai->formSchema['score']->required[] = $field;
         }
 
-        return $lang->ai->formSchema['source'];
+        return $lang->ai->formSchema['score'];
     }
 
     /**
@@ -2054,16 +2061,13 @@ class aiModel extends model
     public function genFieldRules($prompt)
     {
         global $lang;
-        $this->loadModel('source');
+        $this->loadModel('aiscore');
 
-        $fieldRules     = $lang->ai->ruleTip;
-        $rulesWeightTip = $lang->ai->ruleWeightTip;
+        $fieldRules = $lang->ai->ruleTip;
 
-        $ruleList         = $this->source->getRulesList($prompt->module);
-        $rulesWeightPairs = $this->source->getWeightPairs($prompt->id);
+        $ruleList = $this->aiscore->getRulesList($prompt->module);
 
         $sources = explode(',', trim($prompt->source, ','));
-
         foreach($sources as $source)
         {
             $fieldItem = explode('.', $source);
@@ -2075,14 +2079,9 @@ class aiModel extends model
             {
                 $fieldRules .= sprintf($lang->ai->ruleTipFormat, $fieldName, $ruleList[$field]->rules);
             }
-
-            if(isset($rulesWeightPairs[$field]))
-            {
-                $rulesWeightTip .= sprintf($lang->ai->ruleWeightTipFormat, $fieldName, $rulesWeightPairs[$field]);
-            }
         }
 
-        return $fieldRules . $rulesWeightTip;
+        return $fieldRules;
     }
 
     /**
@@ -2105,7 +2104,7 @@ class aiModel extends model
 
         if(empty($prompt->targetForm))
         {
-            $self = new self();
+            $self        = new self();
             $wholePrompt .= $self->genFieldRules($prompt);
         }
 
@@ -2159,10 +2158,28 @@ class aiModel extends model
         if(empty($schema)) return -5;
 
         $this->useLanguageModel($prompt->model);
-        $response = $this->{$this->config->ai->models[$this->modelConfig->type] == 'ernie' ? 'converseTwiceForJSON' : 'converseForJSON'}($prompt->model, array((object)array('role' => 'user', 'content' => $wholePrompt)), $schema);
+        $response = $this->{$this->config->ai->models[$this->modelConfig->type] == 'ernie' ? 'converseTwiceForJSON' : 'converseForJSON'}($prompt->model, array((object) array('role' => 'user', 'content' => $wholePrompt)), $schema);
         if(empty($response)) return -6;
 
         return current($response);
+    }
+
+    /**
+     * Execute prompt by module.
+     *
+     * @param  object     $prompt
+     * @param  int        $objectId
+     * @access public
+     * @return int|string
+     */
+    public function executePromptByModule($prompt, $objectId)
+    {
+        $object = $this->getObjectForPromptById($prompt, $objectId);
+        if(empty($object)) return -2;
+
+        $aiResponse = $this->executePrompt($prompt, $object);
+
+        return $aiResponse;
     }
 
     /**
@@ -2177,7 +2194,7 @@ class aiModel extends model
         if(is_numeric($prompt)) $prompt = $this->getByID($prompt);
         if(empty($prompt)) return false;
 
-        $executable = true;
+        $executable     = true;
         $requiredFields = explode(',', $this->config->ai->testPrompt->requiredFields);
 
         foreach($requiredFields as $field)
@@ -2252,7 +2269,7 @@ class aiModel extends model
         elseif($module == 'execution')
         {
             $executionIds = array_map('intval', explode(',', $this->app->user->view->sprints));
-            $objectId  = max($executionIds);
+            $objectId     = max($executionIds);
         }
         elseif($module == 'task')
         {
@@ -2317,14 +2334,14 @@ class aiModel extends model
         $targetForm = $prompt->targetForm;
         if(empty($targetForm)) return array(false, true);
 
-        list($m, $f) = explode('.', $targetForm);
+        list($m, $f)      = explode('.', $targetForm);
         $targetFormConfig = $this->config->ai->targetForm[$m][$f];
-        $module = strtolower($targetFormConfig->m);
-        $method = strtolower($targetFormConfig->f);
+        $module           = strtolower($targetFormConfig->m);
+        $method           = strtolower($targetFormConfig->f);
 
         /* Try to assemble link vars from both passed-in `$linkArgs` and object props. */
         $varsConfig = $this->config->ai->targetFormVars[$module][$method];
-        $vars = array();
+        $vars       = array();
         foreach($varsConfig->args as $arg => $isRequired)
         {
             $var = '';
@@ -2363,7 +2380,7 @@ class aiModel extends model
 
         /* Overrides for stories. */
         if($module == 'story' && $method == 'change' && !empty($object->story) && $object->story->status == 'draft') $method = 'edit';
-        if($module == 'story' && $method == 'change' && !empty($object->story) && $object->story->type == 'epic')    $module = 'epic';
+        if($module == 'story' && $method == 'change' && !empty($object->story) && $object->story->type == 'epic') $module = 'epic';
 
         return array(helper::createLink($module, $method, $linkVars) . (empty($varsConfig->app) ? '' : "#app=$varsConfig->app"), false);
     }
@@ -2397,7 +2414,7 @@ class aiModel extends model
             foreach($objectNames as $objectName)
             {
                 /* Note that modules are within (product, story, productplan, release, project, execution, task, bug, case, doc). */
-                switch ($prompt->module)
+                switch($prompt->module)
                 {
                     case 'product': // story, branch, productplan, execution, task, bug, case, project, doc
                         if(in_array($objectName, array('story', 'branch', 'productplan', 'task', 'bug', 'case', 'doc')))
@@ -2428,7 +2445,7 @@ class aiModel extends model
                         break;
                     case 'story': // product, branch, productplan, execution, task, bug, case, project, doc
                         if($objectName == 'product') $vars[] = $this->dao->select('product')->from(TABLE_STORY)->where('id')->eq($objectId)->fetch('product');
-                        if($objectName == 'branch')  $vars[] = $this->dao->select('branch')->from(TABLE_STORY)->where('id')->eq($objectId)->fetch('branch');
+                        if($objectName == 'branch') $vars[] = $this->dao->select('branch')->from(TABLE_STORY)->where('id')->eq($objectId)->fetch('branch');
                         if($objectName == 'productplan') $vars[] = $this->dao->select('plan')->from(TABLE_STORY)->where('id')->eq($objectId)->fetch('plan');
                         if(in_array($objectName, array('task', 'bug', 'case', 'doc')))
                         {
@@ -2455,7 +2472,7 @@ class aiModel extends model
                         break;
                     case 'productplan': // product, story, branch, execution, task, bug, case, project, doc
                         if($objectName == 'product') $vars[] = $this->dao->select('product')->from(TABLE_PRODUCTPLAN)->where('id')->eq($objectId)->fetch('product');
-                        if($objectName == 'branch')  $vars[] = $this->dao->select('branch')->from(TABLE_PRODUCTPLAN)->where('id')->eq($objectId)->fetch('branch');
+                        if($objectName == 'branch') $vars[] = $this->dao->select('branch')->from(TABLE_PRODUCTPLAN)->where('id')->eq($objectId)->fetch('branch');
                         if(in_array($objectName, array('story', 'bug')))
                         {
                             $vars[] = $this->dao->select('max(id) as maxId')->from(constant(strtoupper("TABLE_$objectName")))->where('plan')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
@@ -2480,7 +2497,7 @@ class aiModel extends model
                         }
                         if($objectName == 'task') $vars[] = '';
                         if($objectName == 'case') $vars[] = '';
-                        if($objectName == 'doc')  $vars[] = '';
+                        if($objectName == 'doc') $vars[] = '';
                         break;
                     case 'release': // product, story, branch, productplan, execution, task, bug, case, project, doc
                         if(in_array($objectName, array('product', 'branch', 'project')))
@@ -2491,7 +2508,7 @@ class aiModel extends model
                         {
                             $stories = $this->dao->select('stories')->from(TABLE_RELEASE)->where('id')->eq($objectId)->fetch('stories');
                             $stories = explode(',', $stories);
-                            $vars[] = empty($stories) ? '' : max($stories);
+                            $vars[]  = empty($stories) ? '' : max($stories);
                         }
                         if($objectName == 'productplan')
                         {
@@ -2499,7 +2516,7 @@ class aiModel extends model
                                 ->leftJoin(TABLE_RELEASE)->alias('tr')->on('tr.build = tb.id')
                                 ->where('tr.id')->eq($objectId)
                                 ->fetch('tb.execution');
-                            $vars[] = empty($execution) ? '' : $this->dao->select('max(tpp.plan) as maxId')->from(TABLE_PROJECTPRODUCT)->alias('tpp')
+                            $vars[]    = empty($execution) ? '' : $this->dao->select('max(tpp.plan) as maxId')->from(TABLE_PROJECTPRODUCT)->alias('tpp')
                                 ->leftJoin(TABLE_PROJECT)->alias('tp')->on('tp.id = tpp.project')
                                 ->where('tp.id')->eq($execution)
                                 ->andWhere('tp.deleted')->eq(0)
@@ -2514,13 +2531,13 @@ class aiModel extends model
                         }
                         if($objectName == 'bug')
                         {
-                            $bugs = $this->dao->select('bugs')->from(TABLE_RELEASE)->where('id')->eq($objectId)->fetch('bugs');
-                            $bugs = explode(',', $bugs);
+                            $bugs   = $this->dao->select('bugs')->from(TABLE_RELEASE)->where('id')->eq($objectId)->fetch('bugs');
+                            $bugs   = explode(',', $bugs);
                             $vars[] = empty($bugs) ? '' : max($bugs);
                         }
                         if($objectName == 'task') $vars[] = '';
                         if($objectName == 'case') $vars[] = '';
-                        if($objectName == 'doc')  $vars[] = '';
+                        if($objectName == 'doc') $vars[] = '';
                         break;
                     case 'project': // product, story, branch, productplan, execution, task, bug, case, doc
                         if(in_array($objectName, array('product', 'branch', 'productplan')))
@@ -2542,15 +2559,15 @@ class aiModel extends model
                         }
                         break;
                     case 'execution': // product, story, branch, productplan, task, bug, case, project, doc
-                        if($objectName == 'project')     $vars[] = $this->dao->select('project')->from(TABLE_EXECUTION)->where('id')->eq($objectId)->fetch('project');
-                        if($objectName == 'product')     $vars[] = $this->dao->select('product')->from(TABLE_PROJECTPRODUCT)->where('project')->eq($objectId)->fetch('product');
-                        if($objectName == 'story')       $vars[] = $this->dao->select('max(story) as maxId')->from(TABLE_PROJECTSTORY)->where('project')->eq($objectId)->fetch('maxId');
-                        if($objectName == 'branch')      $vars[] = $this->dao->select('max(branch) as maxId')->from(TABLE_PROJECTSTORY)->where('project')->eq($objectId)->fetch('maxId');
+                        if($objectName == 'project') $vars[] = $this->dao->select('project')->from(TABLE_EXECUTION)->where('id')->eq($objectId)->fetch('project');
+                        if($objectName == 'product') $vars[] = $this->dao->select('product')->from(TABLE_PROJECTPRODUCT)->where('project')->eq($objectId)->fetch('product');
+                        if($objectName == 'story') $vars[] = $this->dao->select('max(story) as maxId')->from(TABLE_PROJECTSTORY)->where('project')->eq($objectId)->fetch('maxId');
+                        if($objectName == 'branch') $vars[] = $this->dao->select('max(branch) as maxId')->from(TABLE_PROJECTSTORY)->where('project')->eq($objectId)->fetch('maxId');
                         if($objectName == 'productplan') $vars[] = $this->dao->select('plan')->from(TABLE_PROJECTPRODUCT)->where('project')->eq($objectId)->fetch('plan');
-                        if($objectName == 'task')        $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_TASK)->where('execution')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'bug')         $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'case')        $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_CASE)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'doc')         $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_DOC)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'task') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_TASK)->where('execution')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'bug') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'case') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_CASE)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'doc') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_DOC)->where('project')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
                         break;
                     case 'task': // product, story, branch, productplan, execution, bug, case, project, doc
                         if($objectName == 'product')
@@ -2560,7 +2577,7 @@ class aiModel extends model
                                 ->where('tt.id')->eq($objectId)
                                 ->fetch('product');
                         }
-                        if($objectName == 'story')     $vars[] = $this->dao->select('story')->from(TABLE_TASK)->where('id')->eq($objectId)->fetch('story');
+                        if($objectName == 'story') $vars[] = $this->dao->select('story')->from(TABLE_TASK)->where('id')->eq($objectId)->fetch('story');
                         if($objectName == 'branch')
                         {
                             $vars[] = $this->dao->select('tpp.branch')->from(TABLE_TASK)->alias('tt')
@@ -2576,9 +2593,9 @@ class aiModel extends model
                                 ->fetch('plan');
                         }
                         if($objectName == 'execution') $vars[] = $this->dao->select('execution')->from(TABLE_TASK)->where('id')->eq($objectId)->fetch('execution');
-                        if($objectName == 'bug')       $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('task')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'case')      $vars[] = '';
-                        if($objectName == 'doc')       $vars[] = '';
+                        if($objectName == 'bug') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('task')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'case') $vars[] = '';
+                        if($objectName == 'doc') $vars[] = '';
                         break;
                     case 'bug': // product, story, branch, productplan, execution, task, case, project, doc
                         if(in_array($objectName, array('product', 'branch', 'productplan', 'execution', 'task', 'case', 'story', 'project')))
@@ -2601,8 +2618,8 @@ class aiModel extends model
                                 ->fetch('plan');
                         }
                         if($objectName == 'task') $vars[] = $this->dao->select('max(task) as maxId')->from(TABLE_BUG)->where('case')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'bug')  $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('case')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
-                        if($objectName == 'doc')  $vars[] = '';
+                        if($objectName == 'bug') $vars[] = $this->dao->select('max(id) as maxId')->from(TABLE_BUG)->where('case')->eq($objectId)->andWhere('deleted')->eq(0)->fetch('maxId');
+                        if($objectName == 'doc') $vars[] = '';
                         break;
                     case 'doc': // product, story, branch, productplan, execution, task, bug, case, project
                         if(in_array($objectName, array('product', 'execution', 'project')))
@@ -2720,7 +2737,7 @@ class aiModel extends model
         /* Check user's priv to targetForm. */
         foreach($prompts as $idx => $prompt)
         {
-            list($m, $f) = explode('.', $prompt->targetForm);
+            list($m, $f)      = explode('.', $prompt->targetForm);
             $targetFormConfig = $this->config->ai->targetForm[$m][$f];
             if(empty($targetFormConfig))
             {
@@ -2786,8 +2803,8 @@ class aiModel extends model
      */
     public function createRoleTemplate($role, $characterization)
     {
-        $roleTemplate = new stdclass();
-        $roleTemplate->role = $role;
+        $roleTemplate                   = new stdclass();
+        $roleTemplate->role             = $role;
         $roleTemplate->characterization = $characterization;
 
         $this->dao->insert(TABLE_AI_PROMPTROLE)
@@ -2826,8 +2843,8 @@ class aiModel extends model
      */
     public function updateRoleTemplate($id, $role, $characterization)
     {
-        $roleTemplate = new stdclass();
-        $roleTemplate->role = $role;
+        $roleTemplate                   = new stdclass();
+        $roleTemplate->role             = $role;
         $roleTemplate->characterization = $characterization;
 
         $this->dao->update(TABLE_AI_PROMPTROLE)
@@ -2889,7 +2906,7 @@ class aiModel extends model
         if($publish)
         {
             $assistant->publishedDate = helper::now();
-            $assistant->enabled = '1';
+            $assistant->enabled       = '1';
         }
         else
         {
@@ -2899,7 +2916,7 @@ class aiModel extends model
             ->insert(TABLE_AI_ASSISTANT)
             ->data($assistant)
             ->exec();
-        if (dao::isError()) return false;
+        if(dao::isError()) return false;
         $assistantId = $this->dao->lastInsertID();
         $this->loadModel('action')->create('aiAssistant', $assistantId, 'created');
         if($publish)
@@ -2939,7 +2956,7 @@ class aiModel extends model
             }
         }
 
-        foreach ($assistant as $key => $value)
+        foreach($assistant as $key => $value)
         {
             if(isset($originAssistant->$key)) $originAssistant->$key = $value;
         }

@@ -164,9 +164,8 @@ detailBody
             $canEditContent ? formGroup(editor(set::name('verify'), set::uid($uid), html($story->verify))) : set::content($story->verify),
             $canEditContent ? null : set::useHtml(true)
         ),
-        empty($twins) ? null : section
+        section
         (
-            set::title($lang->story->changeSyncTip),
             to::suffix(set::title($lang->story->syncTip), icon('help')),
             h::ul
             (
