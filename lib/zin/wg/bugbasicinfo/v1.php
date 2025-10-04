@@ -44,7 +44,7 @@ class bugBasicInfo extends wg
 
     protected function getItems()
     {
-        global $lang, $config;
+        global $app, $lang, $config;
 
         $bug = $this->prop('bug', data('bug'));
         if(!$bug) return array();
@@ -180,6 +180,7 @@ class bugBasicInfo extends wg
         $mailtoText = '';
         foreach($mailtoList as $account) $mailtoText .= zget($users, $account) . ' ';
         $items[$lang->bug->mailto] = array('control' => 'text', 'text' => trim($mailtoText), 'title' => trim($mailtoText));
+        if(isset($bug->aiScore) && $app->control->loadModel('ai')->checkPromptByModule($app->rawModule)) $items[$lang->ai->score->common] = $bug->aiScore;
 
         return $items;
     }

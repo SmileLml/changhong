@@ -163,7 +163,7 @@ class caseBasicInfo extends wg
 
     protected function getItems()
     {
-        global $lang;
+        global $app, $lang;
 
         $case = $this->prop('case', data('case'));
         if(!$case) return array();
@@ -201,6 +201,7 @@ class caseBasicInfo extends wg
             $items[$lang->testcase->lastRunResult] = $case->lastRunResult ? $lang->testcase->resultList[$case->lastRunResult] : $lang->testcase->unexecuted;
         }
         $items[$lang->testcase->keywords] = $case->keywords;
+        if(isset($case->aiScore) && $app->control->loadModel('ai')->checkPromptByModule($app->rawModule)) $items[$lang->ai->score->common] = $case->aiScore;
 
         return $items;
     }

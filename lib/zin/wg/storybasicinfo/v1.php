@@ -78,7 +78,7 @@ class storyBasicInfo extends wg
 
     protected function getItems()
     {
-        global $lang, $config;
+        global $app, $lang, $config;
 
         $story = $this->prop('story', data('story'));
         if(!$story) return array();
@@ -232,9 +232,9 @@ class storyBasicInfo extends wg
             $items[$lang->story->feedbackBy]  = $story->feedbackBy;
             $items[$lang->story->notifyEmail] = $story->notifyEmail;
         }
-        $items[$lang->story->keywords]      = $story->keywords;
-        $items[$lang->story->legendMailto]  = joinMailtoList($story->mailto, $users);
-
+        $items[$lang->story->keywords]     = $story->keywords;
+        $items[$lang->story->legendMailto] = joinMailtoList($story->mailto, $users);
+        if(isset($story->aiScore) && $app->control->loadModel('ai')->checkPromptByModule($app->rawModule)) $items[$lang->ai->score->common] = $story->aiScore;
         if($config->vision == 'lite')
         {
             unset($items[$lang->story->product]);

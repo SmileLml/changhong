@@ -38,3 +38,5 @@ $config->ai->triggerAction['bug']['edit']                   = (object)array('m' 
 $config->ai->triggerAction['bug']['story/create']           = (object)array('m' => 'story', 'f' => 'create');
 $config->ai->triggerAction['bug']['testcase/create']        = (object)array('m' => 'testcase', 'f' => 'create');
 $config->ai->triggerAction['doc']['edit']                   = (object)array('m' => 'doc', 'f' => 'edit');
+
+$config->ai->aiScoreAction = array('project', 'execution', 'productplan');

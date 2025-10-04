@@ -58,6 +58,7 @@ class formBatchPanel extends formPanel
 .modal-body .panel-form-batch .form-batch-container {max-height: calc(100vh - 208px);}
 .modal-body > .panel-form-batch {box-shadow: none; margin-top: -12px; margin-bottom: -24px}
 .modal-actions + .modal-body > .panel-form-batch > .panel-heading {padding-right: 20px; background: var(--color-canvas); position: sticky; top: -12px; z-index: 12}
+.ai-weight{border: 1px solid #3883fb !important; color: #3883fb !important;background-color: rgba(56, 131, 251, 0.1) !important;border-radius: 4px !important;padding: 2px 6px !important;font-weight: 500 !important;margin-left: 5px !important;}
 CSS;
     }
 

@@ -52,7 +52,7 @@ class taskBasicInfo extends wg
 
     protected function getItems()
     {
-        global $lang, $config;
+        global $app, $lang, $config;
 
         $task = $this->prop('task', data('task'));
         if(!$task) return array();
@@ -117,6 +117,7 @@ class taskBasicInfo extends wg
 
         $items[$lang->task->keywords] = $task->keywords;
         $items[$lang->story->mailto]  = joinMailtoList($task->mailto, $users);
+        if(isset($task->aiScore) && $app->control->loadModel('ai')->checkPromptByModule($app->rawModule)) $items[$lang->ai->score->common] = $task->aiScore;
 
         return $items;
     }

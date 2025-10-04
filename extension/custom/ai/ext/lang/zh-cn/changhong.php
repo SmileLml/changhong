@@ -37,6 +37,8 @@ $lang->ai->formSchema['score']->properties = new stdclass();
 $lang->ai->formSchema['score']->required   = array();
 
 $lang->ai->score = new stdclass();
+$lang->ai->score->common = 'AI评分';
+
 $lang->ai->score->properties = new stdclass();
 $lang->ai->score->properties->type        = 'number';
 $lang->ai->score->properties->description = "%s评分";

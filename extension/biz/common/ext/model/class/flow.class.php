@@ -418,7 +418,7 @@ class flowCommon extends commonModel
      */
     public function buildOperateMenu($data, $moduleName = '')
     {
-        global $app, $config;
+        global $app, $config, $lang;
         $this->loadModel('flow');
         if($moduleName == 'projectrelease')    $moduleName = 'release';
         else if($moduleName == 'projectbuild') $moduleName = 'build';
@@ -453,6 +453,18 @@ class flowCommon extends commonModel
         }
 
         $actionsMenu = parent::buildOperateMenu($data, $moduleName);
+        $this->loadModel('ai');
+        if(in_array($module, $config->ai->aiScoreAction) && $method == 'view' && $this->ai->checkPromptByModule($module))
+        {
+            if(!isset($actionsMenu['mainActions'])) $actionsMenu['mainActions'] = array();
+            $aiScore = array();
+            $aiScore['icon']        = 'flag';
+            $aiScore['hint']        = $lang->ai->score->common;
+            $aiScore['text']        = $lang->ai->score->common;
+            $aiScore['data-toggle'] = 'modal';
+            $aiScore['url']         = helper::createLink('ai', 'ajaxGetScores', "objectType={$module}&objectID={$data->id}");
+            $actionsMenu['mainActions'][] = $aiScore;
+        }
 
         if(!$flow) return $actionsMenu;
         $this->loadModel('approval');

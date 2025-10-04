@@ -532,7 +532,7 @@ class control extends baseControl
         return $this->loadModel('flow')->buildFormFields($fields, $fieldList, array(), $object);
     }
 
-    public function appendAiWeightFields($fields, $moduleName = '', $methodName = '')
+    public function appendAiWeightFieldLabel($fields, $moduleName = '', $methodName = '')
     {
         $moduleName = $moduleName ? $moduleName : $this->app->rawModule;
         $methodName = $methodName ? $methodName : $this->app->rawMethod;
@@ -559,6 +559,160 @@ class control extends baseControl
             }
         }
         return $fields;
+    }
+
+    private function processAiWeightFieldTip($item, $fieldKey, $fieldName, $weightFields, $rules)
+    {
+        if(isset($weightFields[$fieldKey]) && floatval($weightFields[$fieldKey]) > 0)
+        {
+            $weightText = sprintf('%.2f', floatval($weightFields[$fieldKey]));
+
+            if(is_array($item))
+            {
+                $item['tipIcon']  = '';
+                $item['tipClass'] = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
+                $item['tipProps'] = array('text' => $weightText);
+
+                if(!empty($rules->{$fieldName}))
+                {
+                    $item['tip'] = $rules->{$fieldName};
+                }
+                else
+                {
+                    $item['tip'] = ' ';
+                    $item['tipClass'] = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight close-tip';
+                }
+
+                $currentWidth = isset($item['width']) ? $item['width'] : '0';
+                $item['width'] = $this->ensureMinimumWidth($currentWidth);
+            }
+            else
+            {
+                $item->tipIcon  = '';
+                $item->tipClass = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
+                $item->tipProps = array('text' => $weightText);
+
+                if(!empty($rules->{$fieldName}))
+                {
+                    $item->tip = $rules->{$fieldName};
+                }
+                else
+                {
+                    $item->tip = ' ';
+                    $item->tipClass = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight close-tip';
+                }
+
+                $currentWidth = isset($item->width) ? $item->width : '0';
+                $item->width = $this->ensureMinimumWidth($currentWidth);
+            }
+        }
+
+        return $item;
+    }
+
+    private function ensureMinimumWidth($currentWidth)
+    {
+        if(is_numeric($currentWidth))
+        {
+            $currentWidth = intval($currentWidth);
+            if($currentWidth < 120)
+            {
+                return '120px';
+            }
+            return $currentWidth . 'px';
+        }
+        elseif(is_string($currentWidth) && strpos($currentWidth, 'px') !== false)
+        {
+            $widthValue = intval(str_replace('px', '', $currentWidth));
+            if($widthValue < 120)
+            {
+                return '120px';
+            }
+            return $currentWidth;
+        }
+        else
+        {
+            return '120px';
+        }
+    }
+
+    public function appendAiWeightFieldTipForBatch($items, $moduleName = '', $methodName = '')
+    {
+        if(empty($items)) return $items;
+
+        $moduleName = $moduleName ? $moduleName : $this->app->rawModule;
+        $methodName = $methodName ? $methodName : $this->app->rawMethod;
+
+        $this->loadModel('ai');
+        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $items;
+
+        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if(empty($weightFields)) return $items;
+
+        $rules = $this->ai->getRulesByObjectType($moduleName);
+
+        foreach($items as &$item)
+        {
+            $fieldKey = "$moduleName.{$item['name']}";
+            $fieldName = $item['name'];
+            $item = $this->processAiWeightFieldTip($item, $fieldKey, $fieldName, $weightFields, $rules);
+        }
+
+        return $items;
+    }
+
+    public function appendAiWeightFieldTipForBatchExtend($fields, $moduleName = '', $methodName = '')
+    {
+        if(empty($fields)) return $fields;
+
+        $moduleName = $moduleName ? $moduleName : $this->app->rawModule;
+        $methodName = $methodName ? $methodName : $this->app->rawMethod;
+
+        $this->loadModel('ai');
+        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $fields;
+
+        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if(empty($weightFields)) return $fields;
+
+        $rules = $this->ai->getRulesByObjectType($moduleName);
+
+        foreach($fields as $key => $field)
+        {
+            $fieldKey = "$moduleName.$key";
+            $fields[$key] = $this->processAiWeightFieldTip($field, $fieldKey, $key, $weightFields, $rules);
+        }
+
+        return $fields;
+    }
+
+    public function appendAiWeightFieldTipForSection($moduleName = '', $methodName = '')
+    {
+        $moduleName = $moduleName ?: $this->app->rawModule;
+        $methodName = $methodName ?: $this->app->rawMethod;
+
+        $this->loadModel('ai');
+
+        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName]))
+        {
+            return array();
+        }
+
+        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if(empty($weightFields))
+        {
+            return array();
+        }
+
+        $rules = $this->ai->getRulesByObjectType($moduleName);
+        $weightAndRules = array();
+        foreach($weightFields as $fieldKey => $weight)
+        {
+            $fieldName = explode('.', $fieldKey)[1];
+            $weightAndRules[$fieldName] = array();
+            $weightAndRules[$fieldName]['weight'] = sprintf('%.2f', floatval($weight));
+            $weightAndRules[$fieldName]['rule']   = $rules->{$fieldName} ?? '';
+        }
+        return $weightAndRules;
     }
 
     /**

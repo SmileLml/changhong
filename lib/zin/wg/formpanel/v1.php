@@ -158,7 +158,7 @@ class formPanel extends panel
             global $app;
             list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
             $fields = $app->control->appendExtendFields($fields, $moduleName, $methodName, $this->getData());
-            $fields = $app->control->appendAiWeightFields($fields, $moduleName, $methodName);
+            $fields = $app->control->appendAiWeightFieldLabel($fields, $moduleName, $methodName);
             $this->setProp('fields', $fields);
         }
 
@@ -313,6 +313,7 @@ class formPanel extends panel
         list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
         $data   = $this->getData();
         $fields = $app->control->appendExtendForm('info', $data, $moduleName, $methodName);
+        $fields = $app->control->appendAiWeightFieldTipForBatchExtend($fields, $moduleName, $methodName);
 
         $formBatchItem = array();
         foreach($fields as $field)
@@ -328,7 +329,11 @@ class formPanel extends panel
                 set::items($field->items),
                 set::width('200px'),
                 set::value($value),
-                set::placeholder($field->placeholder)
+                set::placeholder($field->placeholder),
+                isset($field->tip) ? set::tip($field->tip) : null,
+                isset($field->tipClass) ? set::tipClass($field->tipClass) : null,
+                isset($field->tipIcon) ? set::tipIcon($field->tipIcon) : null,
+                isset($field->tipProps) ? set::tipProps($field->tipProps) : null
             );
         }
         return $formBatchItem;
@@ -414,12 +419,31 @@ class formPanel extends panel
         global $app;
 
         list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
+        if($this->prop('batch'))
+        {
+            $items = $this->prop('items', array());
+            $items = $app->control->appendAiWeightFieldTipForBatch($items, $moduleName, $methodName);
+            $this->setProp('items', $items);
+        }
+
         return div
         (
             setClass('panel-body ' . $this->prop('bodyClass')),
             set($this->prop('bodyProps')),
             $this->buildContainer($this->buildForm()),
-            html($app->control->appendExtendCssAndJS($moduleName, $methodName, $this->getData()) . "<style>.ai-weight{border: 1px solid #3883fb !important; color: #3883fb !important;background-color: rgba(56, 131, 251, 0.1) !important;border-radius: 4px !important;padding: 2px 6px !important;font-weight: 500 !important;}</style>" )
+            html($this->getAiWeightCSS()),
+            html($app->control->appendExtendCssAndJS($moduleName, $methodName, $this->getData())),
+            html($this->getAiWeightJS())
         );
+    }
+
+    public static function getAiWeightCSS()
+    {
+        return "<style>.ai-weight{border: 1px solid #3883fb !important; color: #3883fb !important;background-color: rgba(56, 131, 251, 0.1) !important;border-radius: 4px !important;padding: 2px 6px !important;font-weight: 500 !important;}</style>";
+    }
+
+    public static function getAiWeightJS()
+    {
+        return "<script>$(function(){ $('.close-tip').removeAttr('zui-toggle').removeAttr('zui-toggle-tooltip'); });</script>";
     }
 }

@@ -346,11 +346,58 @@ CSS;
 
     protected function buildActions()
     {
+        global $app, $lang;
         $actions      = $this->prop('actions');
         $actionsBlock = $this->block('actions');
         $isSimple     = $this->prop('layout') === 'simple';
 
         if(!$actionsBlock && !is_array($actions)) return null;
+        $app->control->loadModel('ai');
+        if($app->control->ai->checkPromptByModule($app->rawModule))
+        {
+            $aiScore = array();
+            $aiScore['icon']        = 'flag';
+            $aiScore['text']        = $lang->ai->score->common;
+            $aiScore['hint']        = $lang->ai->score->common;
+            $aiScore['url']         = createLink('ai', 'ajaxGetScores', "objectType={$app->rawModule}&objectID={$this->prop('objectID')}");
+            $aiScore['data-toggle'] = 'modal';
+
+            $dividerIndex = -1;
+            foreach($actions as $index => $action)
+            {
+                if(isset($action['type']) && $action['type'] === 'divider')
+                {
+                    $dividerIndex = $index;
+                    break;
+                }
+            }
+
+            if($dividerIndex !== -1)
+            {
+                $newActions = array();
+                foreach($actions as $index => $action)
+                {
+                    if($index === $dividerIndex)
+                    {
+                        $newActions[$index] = $aiScore;
+                        $newActions[$index + 1] = $action;
+                    }
+                    elseif($index > $dividerIndex)
+                    {
+                        $newActions[$index + 1] = $action;
+                    }
+                    else
+                    {
+                        $newActions[$index] = $action;
+                    }
+                }
+                $actions = $newActions;
+            }
+            else
+            {
+                $actions[] = $aiScore;
+            }
+        }
 
         $toolbarProps = array_is_list($actions) ? array('items' => $actions) : $actions;
         if(!$isSimple)

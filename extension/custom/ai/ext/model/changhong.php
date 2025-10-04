@@ -268,3 +268,17 @@ public function getWeightFields($moduleName, $methodName)
 
     return !empty($weightFields) ? $weightFields : array();
 }
+
+public function checkPromptByModule($module)
+{
+    $prompt = $this->dao->select('id,source')
+        ->from(TABLE_AI_PROMPT)
+        ->where('status')->eq('active')
+        ->andWhere('module')->eq($module)
+        ->andWhere('targetForm')->eq("other.score")
+        ->andWhere('deleted')->eq('0')
+        ->fetch();
+
+    if(!$prompt) return false;
+    return true;
+}
