@@ -118,7 +118,7 @@ public function updatePrompt($prompt, $originalPrompt = null)
             $now     = helper::now();
             foreach($sources as $index => $source)
             {
-                $weight           = isset($weights[$index]) ? $weights[$index] : '0.00';
+                $weight           = isset($weights[$index]) ? intval($weights[$index]) : 0;
                 $data             = new stdclass();
                 $data->promptID   = $prompt->id;
                 $data->field      = $source;
@@ -162,7 +162,7 @@ public function getDataSource()
 
     foreach($dataSource as $objectGroupKey => &$objectGroupValue)
     {
-        $workflowFields = $this->loadModel('workflowfield')->getFieldPairs($objectGroupKey, 'custom', false, 'order', array(), array('file'));
+        $workflowFields = $this->loadModel('workflowfield')->getFieldPairs($objectGroupKey == 'case' ? 'testcase' : $objectGroupKey, 'custom', false, 'order', array('aiScore'), array('file'));
         $extendData = $this->config->ai->dataSourceExtend;
 
         if(isset($objectGroupValue[$objectGroupKey]))
@@ -271,6 +271,7 @@ public function getWeightFields($moduleName, $methodName)
 
 public function checkPromptByModule($module)
 {
+    if($module == 'testcase') $module = 'case';
     $prompt = $this->dao->select('id,source')
         ->from(TABLE_AI_PROMPT)
         ->where('status')->eq('active')
@@ -281,4 +282,131 @@ public function checkPromptByModule($module)
 
     if(!$prompt) return false;
     return true;
+}
+
+/**
+ * Generate demo data prompt by source.
+ *
+ * @param  string $module
+ * @param  string $source
+ * @access public
+ * @return string
+ */
+public function generateDemoDataPrompt($module, $source)
+{
+    if(empty($this->lang->ai->demoData->$module)) return $this->lang->ai->demoData->notExist;
+
+    $sources = explode(',', $source);
+    $sources = array_filter($sources);
+
+    if(empty($sources)) return '';
+
+    foreach($sources as $index => $source)
+    {
+        $sources[$index] = explode('.', $source);
+    }
+
+    $data = array();
+    foreach($sources as $source)
+    {
+        $objectName = $source[0];
+        $objectKey  = $source[1];
+        if(empty($data[$objectName])) $data[$objectName] = array();
+        if(in_array($objectKey, $this->config->ai->dataSourceExtend))
+        {
+            if(!isset($this->lang->ai->demoData->$module[$objectName])) $this->lang->ai->demoData->$module[$objectName] = array();
+            $this->lang->ai->demoData->$module[$objectName] = array_merge($this->lang->ai->demoData->$module[$objectName], $this->lang->ai->dataSourceExtendDemoData);
+        }
+        if(!isset($this->lang->ai->demoData->$module[$objectName])) continue;
+        $demoData = $this->lang->ai->demoData->$module[$objectName];
+        if(static::isAssoc($demoData))
+        {
+            if(!isset($demoData[$objectKey])) continue;
+            $data[$objectName][$objectKey] = $demoData[$objectKey];
+        }
+        else
+        {
+            foreach($demoData as $index => $value)
+            {
+                if(!isset($value[$objectKey])) continue;
+                if(empty($data[$objectName][$index])) $data[$objectName][$index] = array();
+                $data[$objectName][$index][$objectKey] = $value[$objectKey];
+            }
+        }
+    }
+
+    return $this->serializeDataToPrompt($module, $sources, $data);
+}
+
+/**
+ * Serialize data to prompt.
+ *
+ * @param  string        $module
+ * @param  array|string  $sources   both raw `$prompt->sources` and `array(array('objectName', 'objectKey'), ...)` are supported.
+ * @param  array|object  $data      array of data to be serialized
+ * @access public
+ * @return string
+ */
+public function serializeDataToPrompt($module, $sources, $data)
+{
+    if(empty($data)) return '';
+
+    /* Handle object data. */
+    if(is_object($data)) $data = (array)$data;
+
+    /* Handle raw (non-exploded) sources. */
+    if(is_string($sources) && strpos($sources, ',') !== false)
+    {
+        $sources = array_filter(explode(',', $sources));
+        $sources = array_map(function ($source)
+        {
+            return explode('.', $source);
+        }, $sources);
+    }
+
+    $dataObject = array();
+
+    $supplement = '';
+    $supplementTypes = array();
+
+    foreach($sources as $source)
+    {
+        $objectName = $source[0];
+        $objectKey  = $source[1];
+
+        $semanticName = $this->lang->ai->dataSource[$module][$objectName]['common'];
+        if(in_array($objectKey, $this->config->ai->dataSourceExtend))
+        {
+            $this->lang->ai->dataSource[$module][$objectName] = array_merge($this->lang->ai->dataSource[$module][$objectName], $this->lang->ai->dataSourceExtend);
+        }
+        if(!isset($this->lang->ai->dataSource[$module][$objectName][$objectKey])) continue;
+        $semanticKey = $this->lang->ai->dataSource[$module][$objectName][$objectKey];
+
+        if(empty($dataObject[$semanticName])) $dataObject[$semanticName] = array();
+
+        $obj = $data[$objectName];
+        if(static::isAssoc($obj))
+        {
+            $dataObject[$semanticName][$semanticKey] = $data[$objectName][$objectKey];
+        }
+        else
+        {
+            foreach(array_keys($obj) as $idx)
+            {
+                if(empty($dataObject[$semanticName][$idx])) $dataObject[$semanticName][$idx] = array();
+                $dataObject[$semanticName][$idx][$semanticKey] = $data[$objectName][$idx][$objectKey];
+            }
+        }
+
+        if(in_array($objectKey, $supplementTypes) || !isset($this->lang->ai->dataType->$objectKey)) continue;
+
+        $supplementTypes[] = $objectKey;
+        $supplement .= sprintf($this->lang->ai->dataTypeDesc, $semanticKey, $this->lang->ai->dataType->$objectKey->type, $this->lang->ai->dataType->$objectKey->desc) . "\n";
+    }
+
+    /* @see https://stackoverflow.com/a/2934602 */
+    return preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function ($match)
+    {
+        return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
+    }, json_encode($dataObject)) . "\n" . $supplement;
 }

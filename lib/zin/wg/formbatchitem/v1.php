@@ -58,7 +58,22 @@ class formBatchItem extends wg
     protected function build()
     {
         list($name, $label, $labelClass, $labelProps, $required, $tip, $tipClass, $tipProps, $tipIcon, $control, $width, $strong, $value, $disabled, $items, $placeholder, $ditto, $defaultDitto, $hidden, $readonly, $multiple) = $this->prop(array('name', 'label', 'labelClass', 'labelProps', 'required', 'tip', 'tipClass', 'tipProps', 'tipIcon', 'control', 'width', 'strong', 'value', 'disabled', 'items', 'placeholder', 'ditto', 'defaultDitto', 'hidden', 'readonly', 'multiple'));
-
+        global $app;
+        if($app->rawModule == 'task' && $app->rawMethod == 'batchcreate')
+        {
+            static $weightAndRules = array();
+            if(empty($weightAndRules))
+            {
+                $weightAndRules = $app->control->appendAiWeightField($app->rawModule, $app->rawMethod, data('parentTask'));
+            }
+            if(isset($weightAndRules[$name]))
+            {
+                $tip      = empty($weightAndRules[$name]['rule']) ? ' ' : $weightAndRules[$name]['rule'];
+                $tipIcon  = '';
+                $tipClass = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight' . (empty($weightAndRules[$name]['rule']) ? ' close-tip' : '');
+                $tipProps = array('text' => empty($weightAndRules[$name]['weight']) ? '0.0' : $weightAndRules[$name]['weight']);
+            }
+        }
         if($required === 'auto') $required = isFieldRequired($name);
 
         if($control !== false)

@@ -5365,7 +5365,7 @@ EOT;
         $uiID         = empty($object) ? 0 : $this->loadModel('workflowlayout')->getUIByData($flow->module, $action->action, $object);
         $extendFields = $this->workflowaction->getPageFields($flow->module, $action->action, true, $object, $uiID, $groupID);
         $layouts      = $this->loadModel('workflowlayout')->getFields($moduleName, $methodName, $uiID, $groupID);
-
+        \a($layouts);die;
         $items = '';
         foreach($layouts as $fieldKey => $fieldName)
         {

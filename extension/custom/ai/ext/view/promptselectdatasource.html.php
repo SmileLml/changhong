@@ -348,8 +348,8 @@ class SelectedDataSorter extends HTMLDivElement
         const inputField = document.createElement('input');
         inputField.type = 'text';
         inputField.classList.add('form-control', 'input-sm', 'input-field');
-        let defaultValue = '0.00';
-        if(scoreWeights && scoreWeights[prop]) defaultValue = parseFloat(scoreWeights[prop].weight).toFixed(2);
+        let defaultValue = '0';
+        if(scoreWeights && scoreWeights[prop]) defaultValue = parseInt(scoreWeights[prop].weight);
         inputField.value = this.inputValues.get(prop) || defaultValue;
         inputField.addEventListener('change', () => {
           this.inputValues.set(prop, inputField.value);
@@ -408,77 +408,85 @@ class SelectedDataSorter extends HTMLDivElement
 
 function validateInputField(input)
 {
-  let value = input.value;
+  let value         = input.value;
+  let originalValue = value;
+  value = value.replace(/[^\d]/g, '');
   if(value === '')
   {
-		input.value = '0.00';
-		return;
+    const numbersFromOriginal = originalValue.match(/\d+/);
+    value = numbersFromOriginal ? numbersFromOriginal[0] : '0';
   }
-  value = value.replace(/[^\d.]/g, '');
-  if(value.startsWith('.')) value = '0' + value;
-  const decimalIndex = value.indexOf('.');
-  if(decimalIndex !== -1)
-	{
-		const beforeDecimal = value.substring(0, decimalIndex);
-		const afterDecimal  = value.substring(decimalIndex + 1);
-		value = beforeDecimal + '.' + afterDecimal.replace(/\./g, '');
-  }
-  if(decimalIndex !== -1)
-	{
-		const afterDecimal = value.substring(decimalIndex + 1);
-		if(afterDecimal.length > 2) value = value.substring(0, decimalIndex + 3);
-  }
-  const numericValue = parseFloat(value) || 0;
-  if(numericValue > 100) value = '100.00';
+  value = value.replace(/^0+(?=\d)/, '');
+  if(value === '') value = '0';
+  const numericValue = parseInt(value) || 0;
+  const inputFields = document.querySelectorAll('#selected-data-sorter input[type="text"]:not([disabled])');
+  let otherTotal = 0;
+  inputFields.forEach(field => {
+    if(field !== input)
+    {
+      otherTotal += parseInt(field.value) || 0;
+    }
+  });
+  const maxAllowed = Math.max(0, 100 - otherTotal);
+  if(numericValue > maxAllowed) value = maxAllowed.toString();
   input.value = value;
   validateTotalSumWithSmartInput(input);
 }
 
+function formatInputField(input)
+{
+  let value = input.value;
+  if(value === '') return;
+
+  const numericValue = parseInt(value) || 0;
+  if(numericValue > 100)
+  {
+    input.value = '100';
+  }
+  else if(numericValue < 0)
+  {
+    input.value = '0';
+  }
+  else
+  {
+    input.value = numericValue.toString();
+  }
+}
+
 function validateTotalSumWithSmartInput(currentInput = null)
 {
-	const inputFields = document.querySelectorAll('#selected-data-sorter input[type="text"]:not([disabled])');
-	let total           = 0;
-	let remaining       = 100;
-	let hasInvalidInput = false;
-	inputFields.forEach(input => {input.classList.remove('input-invalid');});
-	inputFields.forEach(input => {
-		const value = parseFloat(input.value) || 0;
-		total += value;
-		if(value > 100)
-		{
-			input.classList.add('input-invalid');
-			hasInvalidInput = true;
-		}
-	});
-	total     = Math.round(total * 100) / 100;
-	remaining = Math.round((100 - total) * 100) / 100;
-	if(currentInput && remaining <= 0)
-	{
-		const currentValue = parseFloat(currentInput.value) || 0;
-		if(remaining < 0)
-		{
-			const otherInputsTotal = total - currentValue;
-			const maxAllowed       = Math.max(0, 100 - otherInputsTotal);
-			const formattedMax     = Math.round(maxAllowed * 100) / 100;
-			currentInput.value     = formattedMax.toFixed(2);
-			total                  = otherInputsTotal + formattedMax;
-			remaining              = Math.round((100 - total) * 100) / 100;
-		}
-		else if(remaining === 0 && currentValue > 0)
-		{
-			const otherInputsTotal = total - currentValue;
-			const maxAllowed       = Math.max(0, 100 - otherInputsTotal);
-			const formattedMax     = Math.round(maxAllowed * 100) / 100;
-			if(currentValue > maxAllowed)
-			{
-				currentInput.value = formattedMax.toFixed(2);
-				total 					   = otherInputsTotal + formattedMax;
-				remaining 			   = Math.round((100 - total) * 100) / 100;
-			}
-		}
-	}
-	if(total > 100.00) return false;
-	return !hasInvalidInput;
+  const inputFields = document.querySelectorAll('#selected-data-sorter input[type="text"]:not([disabled])');
+
+  let total           = 0;
+  let hasInvalidInput = false;
+
+  inputFields.forEach(input => {
+    input.classList.remove('input-invalid');
+    const value = parseInt(input.value) || 0;
+    total += value;
+  });
+
+  if(total > 100)
+  {
+    inputFields.forEach(input => input.classList.add('input-invalid'));
+    hasInvalidInput = true;
+  }
+
+  if(currentInput && total > 100)
+  {
+    const currentValue     = parseInt(currentInput.value) || 0;
+    const otherInputsTotal = total - currentValue;
+    const maxAllowed       = Math.max(0, 100 - otherInputsTotal);
+
+    if(currentValue > maxAllowed)
+    {
+      currentInput.value = maxAllowed.toString();
+      currentInput.classList.add('input-invalid');
+      hasInvalidInput = true;
+    }
+  }
+
+  return !hasInvalidInput;
 }
 
 function validateTotalSum()
@@ -559,7 +567,7 @@ function validateForm()
     let totalWeight = 0;
 
     inputFields.forEach(input => {
-      const value = parseFloat(input.value) || 0;
+      const value = parseInt(input.value) || 0;
       totalWeight += value;
     });
 

@@ -353,7 +353,7 @@ CSS;
 
         if(!$actionsBlock && !is_array($actions)) return null;
         $app->control->loadModel('ai');
-        if($app->control->ai->checkPromptByModule($app->rawModule))
+        if(false && $app->control->ai->checkPromptByModule($app->rawModule))
         {
             $aiScore = array();
             $aiScore['icon']        = 'flag';

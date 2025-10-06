@@ -158,7 +158,18 @@ class formPanel extends panel
             global $app;
             list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
             $fields = $app->control->appendExtendFields($fields, $moduleName, $methodName, $this->getData());
-            $fields = $app->control->appendAiWeightFieldLabel($fields, $moduleName, $methodName);
+            $object = $this->getData();
+            if($moduleName == 'testcase')
+            {
+                $object = (object)data('case');
+                $object->from = data('from');
+            }
+            else if($moduleName == 'story')
+            {
+                $object = (object)data('initStory');
+            }
+
+            $fields = $app->control->appendAiWeightFieldLabel($fields, $moduleName, $methodName, $object);
             $this->setProp('fields', $fields);
         }
 
@@ -276,6 +287,8 @@ class formPanel extends panel
 
         $data      = $this->getData();
         $fields    = $app->control->appendExtendForm('info', $data, $moduleName, $methodName);
+        $aiWeightField = array();
+        if($moduleName == 'productplan') $aiWeightField = $app->control->appendAiWeightField($moduleName, $methodName);
         $extraMain = array();
         foreach($fields as $field)
         {
@@ -299,7 +312,10 @@ class formPanel extends panel
                 set::control($field->control),
                 set::items($field->items),
                 set::value($field->value),
-                set::placeholder($field->placeholder)
+                set::placeholder($field->placeholder),
+                isset($aiWeightField[$field->field]) ? set::labelHint(empty($aiWeightField[$field->field]['rule']) ? ' ' : $aiWeightField[$field->field]['rule']) : null,
+                isset($aiWeightField[$field->field]) ? (empty($aiWeightField[$field->field]['rule']) ? set::labelHintClass('ai-weight close-tip') : set::labelHintClass('ai-weight')) : null,
+                isset($aiWeightField[$field->field]) ? set::labelHintProps(array('control' => 'text', 'text' => empty($aiWeightField[$field->field]['weight']) ? '0.0' : $aiWeightField[$field->field]['weight'])) : null
             );
             if((bool)$field->readonly) $extraMain[] = formHidden($field->field, $field->value);
         }
@@ -313,7 +329,9 @@ class formPanel extends panel
         list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
         $data   = $this->getData();
         $fields = $app->control->appendExtendForm('info', $data, $moduleName, $methodName);
-        $fields = $app->control->appendAiWeightFieldTipForBatchExtend($fields, $moduleName, $methodName);
+        $object = $this->getData();
+        if($moduleName == 'testcase') $object = (object)data('story');
+        $fields = $app->control->appendAiWeightFieldTipForBatchExtend($fields, $moduleName, $methodName, $object);
 
         $formBatchItem = array();
         foreach($fields as $field)
@@ -330,9 +348,9 @@ class formPanel extends panel
                 set::width('200px'),
                 set::value($value),
                 set::placeholder($field->placeholder),
-                isset($field->tip) ? set::tip($field->tip) : null,
+                isset($field->tip)      ? set::tip($field->tip) : null,
                 isset($field->tipClass) ? set::tipClass($field->tipClass) : null,
-                isset($field->tipIcon) ? set::tipIcon($field->tipIcon) : null,
+                isset($field->tipIcon)  ? set::tipIcon($field->tipIcon) : null,
                 isset($field->tipProps) ? set::tipProps($field->tipProps) : null
             );
         }
@@ -421,8 +439,10 @@ class formPanel extends panel
         list($moduleName, $methodName) = $this->getModuleAndMethodForExtend();
         if($this->prop('batch'))
         {
-            $items = $this->prop('items', array());
-            $items = $app->control->appendAiWeightFieldTipForBatch($items, $moduleName, $methodName);
+            $items  = $this->prop('items', array());
+            $object = $this->getData();
+            if($moduleName == 'testcase') $object = (object)data('story');
+            $items = $app->control->appendAiWeightFieldTipForBatch($items, $moduleName, $methodName, $object);
             $this->setProp('items', $items);
         }
 
@@ -444,6 +464,6 @@ class formPanel extends panel
 
     public static function getAiWeightJS()
     {
-        return "<script>$(function(){ $('.close-tip').removeAttr('zui-toggle').removeAttr('zui-toggle-tooltip'); });</script>";
+        return "<script>$(function(){ $('.close-tip').removeAttr('zui-toggle').removeAttr('zui-toggle-tooltip');$('.ai-weight').each(function() {const textSpan = $(this).find('span.text'); if(textSpan.length && textSpan.text() === '0.0'){textSpan.text('0');}}); });</script>";
     }
 }

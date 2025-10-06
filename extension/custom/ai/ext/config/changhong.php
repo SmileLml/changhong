@@ -18,8 +18,8 @@ $config->ai->triggerAction = array();
 $config->ai->triggerAction['requirement']['create']         = (object)array('m' => 'story', 'f' => 'create');
 $config->ai->triggerAction['requirement']['batchcreate']    = (object)array('m' => 'story', 'f' => 'batchcreate');
 $config->ai->triggerAction['requirement']['change']         = (object)array('m' => 'story', 'f' => 'change');
-$config->ai->triggerAction['requirement']['totask']         = (object)array('m' => 'task', 'f' => 'batchcreate');
-$config->ai->triggerAction['requirement']['testcasecreate'] = (object)array('m' => 'testcase', 'f' => 'create');
+/* $config->ai->triggerAction['requirement']['totask']         = (object)array('m' => 'task', 'f' => 'batchcreate'); */
+/* $config->ai->triggerAction['requirement']['testcasecreate'] = (object)array('m' => 'testcase', 'f' => 'create'); */
 $config->ai->triggerAction['requirement']['subdivide']      = (object)array('m' => 'story', 'f' => 'batchcreate');
 $config->ai->triggerAction['story']['create']               = (object)array('m' => 'story', 'f' => 'create');
 $config->ai->triggerAction['story']['batchcreate']          = (object)array('m' => 'story', 'f' => 'batchcreate');
@@ -39,4 +39,6 @@ $config->ai->triggerAction['bug']['story/create']           = (object)array('m' 
 $config->ai->triggerAction['bug']['testcase/create']        = (object)array('m' => 'testcase', 'f' => 'create');
 $config->ai->triggerAction['doc']['edit']                   = (object)array('m' => 'doc', 'f' => 'edit');
 
-$config->ai->aiScoreAction = array('project', 'execution', 'productplan');
+$config->ai->aiScoreAction = array('product', 'release', 'productplan', 'requirement', 'story', 'testcase', 'bug', 'project', 'execution', 'task');
+
+$config->ai->hideAiScoreFieldForModule = array('requirement', 'story', 'testcase', 'bug', 'task');

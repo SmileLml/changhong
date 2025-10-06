@@ -1868,10 +1868,10 @@ class aiModel extends model
      * Determines if an array is associative.
      *
      * @param  array $array
-     * @access private
+     * @access public
      * @return bool
      */
-    private static function isAssoc($array)
+    public static function isAssoc($array)
     {
         $keys = array_keys($array);
         return array_keys($keys) !== $keys;

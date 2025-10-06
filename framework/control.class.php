@@ -532,24 +532,46 @@ class control extends baseControl
         return $this->loadModel('flow')->buildFormFields($fields, $fieldList, array(), $object);
     }
 
-    public function appendAiWeightFieldLabel($fields, $moduleName = '', $methodName = '')
+    public function appendAiWeightFieldLabel($fields, $moduleName = '', $methodName = '', $object = null)
     {
         $moduleName = $moduleName ? $moduleName : $this->app->rawModule;
         $methodName = $methodName ? $methodName : $this->app->rawMethod;
         $this->loadModel('ai');
-        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $fields;
-        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        $realModuleName = $moduleName;
+        $realMethodName = $methodName;
+        if($moduleName == 'task' && $methodName == 'create' && $object && !empty($object->story))
+        {
+            $realModuleName = 'story';
+            $realMethodName = 'totask';
+        }
+        else if($moduleName == 'testcase' && $methodName == 'create' && $object && !empty($object->story))
+        {
+            $realModuleName = $object->from == 'bug' ? 'bug' : 'story';
+            $realMethodName = $object->from == 'bug' ? 'testcase/create' : 'testcasecreate';
+        }
+        else if($moduleName == 'story' && $methodName == 'create' && $object && !empty($object->source) && $object->source == 'bug')
+        {
+            $realModuleName = 'bug';
+            $realMethodName = 'story/create';
+        }
+
+        if($moduleName == 'testcase')
+        {
+            $moduleName = 'case';
+        }
+
+        if(!isset($this->config->ai->triggerAction[$realModuleName][$realMethodName])) return $fields;
+        $weightFields = $this->ai->getWeightFields($realModuleName, $realMethodName);
         if(empty($weightFields)) return $fields;
         $rules = $this->ai->getRulesByObjectType($moduleName);
         foreach($fields->fields as $key => $item)
         {
-            if(isset($weightFields["$moduleName.$key"]) && floatval($weightFields["$moduleName.$key"]) > 0)
+            if(isset($weightFields["$moduleName.$key"]) && intval($weightFields["$moduleName.$key"]) >= 0)
             {
-                $weightText = sprintf('%.2f', floatval($weightFields["$moduleName.$key"]));
                 $labelControl = array();
                 $labelControl['control'] = 'text';
                 $labelControl['class']   = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
-                $labelControl['text']    = $weightText;
+                $labelControl['text']    = intval($weightFields["$moduleName.$key"]);
                 if(!empty($rules->$key))
                 {
                     $labelControl['zui-toggle'] = 'tooltip';
@@ -563,15 +585,15 @@ class control extends baseControl
 
     private function processAiWeightFieldTip($item, $fieldKey, $fieldName, $weightFields, $rules)
     {
-        if(isset($weightFields[$fieldKey]) && floatval($weightFields[$fieldKey]) > 0)
+        if(isset($weightFields[$fieldKey]) && intval($weightFields[$fieldKey]) >= 0)
         {
-            $weightText = sprintf('%.2f', floatval($weightFields[$fieldKey]));
+            $weightText = $weightFields[$fieldKey];
 
             if(is_array($item))
             {
                 $item['tipIcon']  = '';
                 $item['tipClass'] = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
-                $item['tipProps'] = array('text' => $weightText);
+                $item['tipProps'] = array('text' => empty($weightText) ? '0.0' : $weightText);
 
                 if(!empty($rules->{$fieldName}))
                 {
@@ -590,7 +612,7 @@ class control extends baseControl
             {
                 $item->tipIcon  = '';
                 $item->tipClass = 'ghost form-label-hint text-gray-300 btn square size-sm ai-weight';
-                $item->tipProps = array('text' => $weightText);
+                $item->tipProps = array('text' => empty($weightText) ? '0.0' : $weightText);
 
                 if(!empty($rules->{$fieldName}))
                 {
@@ -636,7 +658,7 @@ class control extends baseControl
         }
     }
 
-    public function appendAiWeightFieldTipForBatch($items, $moduleName = '', $methodName = '')
+    public function appendAiWeightFieldTipForBatch($items, $moduleName = '', $methodName = '', $object = null)
     {
         if(empty($items)) return $items;
 
@@ -644,16 +666,40 @@ class control extends baseControl
         $methodName = $methodName ? $methodName : $this->app->rawMethod;
 
         $this->loadModel('ai');
-        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $items;
+        $realModuleName = $moduleName;
+        $realMethodName = $methodName;
+        if($moduleName == 'story' && $methodName == 'batchcreate' && $object && !empty($object->id))
+        {
+            $realModuleName = $object->type == 'story' ? 'story' : 'requirement';
+            $realMethodName = 'subdivide';
+        }
+        else if($moduleName == 'testcase' && $methodName == 'batchcreate' && $object && !empty($object->id))
+        {
+            $realModuleName = 'story';
+            $realMethodName = 'testcasecreate';
+        }
+        else if($moduleName == 'programplan' && $methodName == 'create')
+        {
+            $realModuleName = 'project';
+            $realMethodName = 'programplan/create';
+        }
 
-        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if($moduleName == 'testcase')
+        {
+            $moduleName = 'case';
+        }
+
+        if(!isset($this->config->ai->triggerAction[$realModuleName][$realMethodName])) return $items;
+
+        $weightFields = $this->ai->getWeightFields($realModuleName, $realMethodName);
         if(empty($weightFields)) return $items;
 
         $rules = $this->ai->getRulesByObjectType($moduleName);
 
         foreach($items as &$item)
         {
-            $fieldKey = "$moduleName.{$item['name']}";
+            if($moduleName == 'programplan') $moduleName .= 's';
+            $fieldKey  = "$moduleName.{$item['name']}";
             $fieldName = $item['name'];
             $item = $this->processAiWeightFieldTip($item, $fieldKey, $fieldName, $weightFields, $rules);
         }
@@ -661,7 +707,7 @@ class control extends baseControl
         return $items;
     }
 
-    public function appendAiWeightFieldTipForBatchExtend($fields, $moduleName = '', $methodName = '')
+    public function appendAiWeightFieldTipForBatchExtend($fields, $moduleName = '', $methodName = '', $object = null)
     {
         if(empty($fields)) return $fields;
 
@@ -669,35 +715,66 @@ class control extends baseControl
         $methodName = $methodName ? $methodName : $this->app->rawMethod;
 
         $this->loadModel('ai');
-        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName])) return $fields;
+        $realModuleName = $moduleName;
+        $realMethodName = $methodName;
+        if($moduleName == 'story' && $methodName == 'batchcreate' && $object && !empty($object->id))
+        {
+            $realModuleName = $object->type == 'story' ? 'story' : 'requirement';
+            $realMethodName = 'subdivide';
+        }
+        else if($moduleName == 'testcase' && $methodName == 'batchcreate' && $object && !empty($object->id))
+        {
+            $realModuleName = 'story';
+            $realMethodName = 'testcasecreate';
+        }
+        else if($moduleName == 'programplan' && $methodName == 'create')
+        {
+            $realModuleName = 'project';
+            $realMethodName = 'programplan/create';
+        }
 
-        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        if($moduleName == 'testcase')
+        {
+            $moduleName = 'case';
+        }
+        if(!isset($this->config->ai->triggerAction[$realModuleName][$realMethodName])) return $fields;
+
+        $weightFields = $this->ai->getWeightFields($realModuleName, $realMethodName);
         if(empty($weightFields)) return $fields;
 
         $rules = $this->ai->getRulesByObjectType($moduleName);
 
         foreach($fields as $key => $field)
         {
-            $fieldKey = "$moduleName.$key";
+            if($moduleName == 'programplan') $moduleName .= 's';
+            $fieldKey     = "$moduleName.$key";
             $fields[$key] = $this->processAiWeightFieldTip($field, $fieldKey, $key, $weightFields, $rules);
         }
 
         return $fields;
     }
 
-    public function appendAiWeightFieldTipForSection($moduleName = '', $methodName = '')
+    public function appendAiWeightField($moduleName = '', $methodName = '', $object = null)
     {
         $moduleName = $moduleName ?: $this->app->rawModule;
         $methodName = $methodName ?: $this->app->rawMethod;
 
+        $realModuleName = $moduleName;
+        $realMethodName = $methodName;
+        if($moduleName == 'task' && $methodName == 'batchcreate' && is_null($object))
+        {
+            $realModuleName = 'execution';
+            $realMethodName = 'batchcreatetask';
+        }
+
         $this->loadModel('ai');
 
-        if(!isset($this->config->ai->triggerAction[$moduleName][$methodName]))
+        if(!isset($this->config->ai->triggerAction[$realModuleName][$realMethodName]))
         {
             return array();
         }
 
-        $weightFields = $this->ai->getWeightFields($moduleName, $methodName);
+        $weightFields = $this->ai->getWeightFields($realModuleName, $realMethodName);
         if(empty($weightFields))
         {
             return array();
@@ -709,7 +786,7 @@ class control extends baseControl
         {
             $fieldName = explode('.', $fieldKey)[1];
             $weightAndRules[$fieldName] = array();
-            $weightAndRules[$fieldName]['weight'] = sprintf('%.2f', floatval($weight));
+            $weightAndRules[$fieldName]['weight'] = intval($weight);
             $weightAndRules[$fieldName]['rule']   = $rules->{$fieldName} ?? '';
         }
         return $weightAndRules;

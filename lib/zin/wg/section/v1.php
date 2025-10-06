@@ -44,10 +44,10 @@ class section extends wg
                 set::text($weightAndRules[$name]['weight']),
                 !empty($weightAndRules[$name]['rule']) ? set('zui-toggle', 'tooltip') : null,
                 !empty($weightAndRules[$name]['rule']) ? set('zui-toggle-tooltip', json_encode(array(
-                    'title'       => $weightAndRules[$name]['rule'],
-                    'className'   => 'text-gray border border-gray-300',
-                    'type'        => 'white',
-                    'placement'   => 'right'
+                    'title'     => $weightAndRules[$name]['rule'],
+                    'className' => 'text-gray border border-gray-300',
+                    'type'      => 'white',
+                    'placement' => 'right'
                 ))) : null,
                 $weightAndRules[$name]['weight']
             )
@@ -192,7 +192,7 @@ class section extends wg
                         return $cleanName;
                     }
                 }
-                
+
                 if(is_object($child) && method_exists($child, 'children'))
                 {
                     $grandChildren = $child->children();
@@ -214,7 +214,7 @@ class section extends wg
 
         if(empty($weightAndRules))
         {
-            $weightAndRules = $app->control->appendAiWeightFieldTipForSection($moduleName, $methodName);
+            $weightAndRules = $app->control->appendAiWeightField($moduleName, $methodName);
         }
 
         return div

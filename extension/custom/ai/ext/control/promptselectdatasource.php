@@ -31,13 +31,11 @@ class myAI extends ai
 
             return $this->send(array('result' => 'success', 'message' => $this->lang->saveSuccess, 'locate' => $this->inlink('promptSelectDataSource', "promptID=$promptID") . '#app=admin'));
         }
-        $scoreWeights             = $this->ai->getScoreWeights($promptID);
-        $prompt->datasourceweight = 0.00;
-        foreach($scoreWeights as $sourceWeight)
-        {
-            $prompt->datasourceweight += (float) $sourceWeight->weight;
-        }
-        $prompt->datasourceweight     = round($prompt->datasourceweight, 2);
+        $scoreWeights = $this->ai->getScoreWeights($promptID);
+        $prompt->datasourceweight = array_sum(array_map(function($sourceWeight) {
+            return (int) $sourceWeight->weight;
+        }, $scoreWeights));
+
         $this->view->activeDataSource = empty($prompt->module) ? current(array_keys($this->config->ai->dataSource)) : $prompt->module;
         $this->view->dataSource       = $this->ai->getDataSource();
         $this->view->prompt           = $prompt;

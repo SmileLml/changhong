@@ -60,7 +60,7 @@
               <small class='text-gray'><?php echo $lang->ai->prompts->selectTargetFormTip;?></small>
             </div>
             <div class='content'>
-              <?php if($config->ai->targetForm['other']):?>
+              <?php if(!empty($config->ai->targetForm['other'])):?>
 								<div class='target-form-group'>
                   <div class='header text-gray'>
                     <div><?php echo $lang->ai->targetForm['other']['common'];?></div>
@@ -68,7 +68,7 @@
                   <div class='options'>
                     <?php foreach(array_keys($config->ai->targetForm['other']) as $form):?>
                       <div class='option'>
-                        <input type='radio' name='targetForm' value='<?php echo "other.$form";?>' <?php echo (("other.$form" == "other.score" and !empty($prompt->triggerControl)) or ("other.$form" == $prompt->targetForm and empty($prompt->triggerControl))) ? 'checked' : '';?> <?php echo !empty($prompt->triggerControl) ? "disabled='disabled'" : '';?>>
+                        <input type='radio' name='targetForm' value='<?php echo "other.$form";?>' <?php echo (("other.$form" == "other.score" and !empty($prompt->triggerControl)) or ("other.$form" == $prompt->targetForm)) ? 'checked' : '';?> <?php echo !empty($prompt->triggerControl) ? "disabled='disabled'" : '';?>>
                         <label><?php echo $lang->ai->targetForm['other'][$form];?></label>
                       </div>
                     <?php endforeach;?>
