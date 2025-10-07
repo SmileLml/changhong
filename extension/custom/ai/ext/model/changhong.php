@@ -410,3 +410,45 @@ public function serializeDataToPrompt($module, $sources, $data)
         return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
     }, json_encode($dataObject)) . "\n" . $supplement;
 }
+
+public function getScoresFields($objectType)
+{
+    if(empty($objectType)) return array();
+    if($objectType == 'testcase') $objectType = 'case';
+    $defaultFields  = isset($this->config->ai->dataSource[$objectType][$objectType]) ? $this->config->ai->dataSource[$objectType][$objectType] : array();
+    $workflowFields = $this->loadModel('workflowfield')->getFieldPairs($objectType, 'custom', false, 'order', array('aiScore'), array('file'));
+    $extendFields   = isset($this->config->ai->dataSourceExtend) ? $this->config->ai->dataSourceExtend : array();
+    $allFields      = array_merge($defaultFields, array_keys($workflowFields), $extendFields);
+
+    $this->loadModel('aiscore');
+    if(!empty($defaultFields))
+    {
+        foreach($defaultFields as $fieldKey)
+        {
+            if(isset($this->lang->ai->dataSource[$objectType][$objectType][$fieldKey]))
+            {
+                $this->lang->aiscore->$fieldKey = $this->lang->ai->dataSource[$objectType][$objectType][$fieldKey];
+            }
+        }
+    }
+
+    if(!empty($extendFields) && isset($this->lang->ai->dataSourceExtend))
+    {
+        foreach($extendFields as $fieldKey)
+        {
+            if(isset($this->lang->ai->dataSourceExtend[$fieldKey]))
+            {
+                $this->lang->aiscore->$fieldKey = $this->lang->ai->dataSourceExtend[$fieldKey];
+            }
+        }
+    }
+
+    if(!empty($workflowFields))
+    {
+        foreach($workflowFields as $fieldKey => $fieldValue)
+        {
+            $this->lang->aiscore->$fieldKey = $fieldValue;
+        }
+    }
+    return $allFields;
+}

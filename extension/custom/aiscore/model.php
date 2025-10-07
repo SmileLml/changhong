@@ -93,4 +93,84 @@ class aiscoreModel extends model
         $table = $this->loadModel('workflow')->getTableByModule($objectType);
         $this->dao->update($table)->set('aiScore')->eq($totalScore)->where('id')->eq($objectID)->exec();
     }
+
+    /**
+     * Get AI score results by object.
+     *
+     * @param  string $objectType
+     * @param  int    $objectID
+     * @param  array  $fields
+     * @access public
+     * @return array
+     */
+    public function getResultByObject($objectType, $objectID, $fields)
+    {
+        $scoreRecords = $this->dao->select('*')->from(TABLE_AISCORE_RESULT)
+            ->where('objectType')->eq($objectType)
+            ->andWhere('objectID')->eq($objectID)
+            ->fetchGroup('times');
+
+        if(empty($scoreRecords)) return array();
+
+        $results = array();
+
+        foreach($scoreRecords as $times => $records) 
+        {
+            $baseRecord = $records[0];
+
+            $result = new stdclass();
+            $result->id              = $times;
+            $result->action          = $baseRecord->action;
+            $result->aiRequestStatus = 'doing';
+            $result->createDate      = $baseRecord->createDate;
+            $result->summary         = 0;
+            $result->details         = array();
+
+            foreach($records as $record) 
+            {
+                if(empty($record->field)) 
+                {
+                    $result->summary = $record->score;
+                } 
+                else 
+                {
+                    $result->details[$record->field] = $record;
+                }
+            }
+
+            foreach($fields as $field) 
+            {
+                if(!isset($result->details[$field])) 
+                {
+                    $result->$field = '-';
+                } 
+                else if(empty($result->details[$field]->score) && $result->details[$field]->score !== '0') 
+                {
+                    $result->$field = '';
+                } 
+                else 
+                {
+                    $result->$field = $result->details[$field]->score;
+                }
+            }
+
+            $results[$times] = $result;
+        }
+
+        return $results;
+    }
+
+    public function updateResultTableConfig($objectType, $fields)
+    {
+        $this->config->aiscore->dtable->fieldList['action']['map'] = $this->lang->ai->triggerAction[$objectType];
+        $colIndex = count($this->config->aiscore->dtable->fieldList);
+        foreach($fields as $field)
+        {
+            $this->config->aiscore->dtable->fieldList[$field]['title']    = $this->lang->aiscore->$field;
+            $this->config->aiscore->dtable->fieldList[$field]['type']     = 'text';
+            $this->config->aiscore->dtable->fieldList[$field]['align']    = 'center';
+            $this->config->aiscore->dtable->fieldList[$field]['sortType'] = false;
+            $this->config->aiscore->dtable->fieldList[$field]['group']    = ++$colIndex;
+        }
+    }
 }

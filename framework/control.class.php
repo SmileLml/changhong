@@ -60,6 +60,7 @@ class control extends baseControl
             if(isset($this->config->{$this->moduleName}->exportFields) or isset($this->config->{$this->moduleName}->list->exportFields))
             {
                 $exportFields = $this->dao->select('field, name')->from(TABLE_WORKFLOWFIELD)->where('module')->eq($this->moduleName)->andWhere('canExport')->eq('1')->andWhere('buildin')->eq('0')->fetchAll('field');
+                if(!$this->loadModel('ai')->checkPromptByModule($this->moduleName)) unset($exportFields['aiScore']);
 
                 if(isset($this->config->{$this->moduleName}->exportFields))
                 {

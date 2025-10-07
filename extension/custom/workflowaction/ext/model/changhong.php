@@ -17,9 +17,21 @@ public function getPageFields($module, $action, $getRealOptions = true, $datas =
 {
     $fields = parent::getPageFields($module, $action, $getRealOptions, $datas, $ui, $groupID);
     if(empty($fields)) return $fields;
-    if($action !== 'view') return $fields;
+    $moduleActionWhitelist = array(
+        'product'    => array('view', 'all'),
+        'release'    => array('view', 'browse'),
+        'requirement'=> array('view', 'browse'),
+        'story'      => array('view', 'browse'),
+        'testcase'   => array('view', 'browse'),
+        'bug'        => array('view', 'browse'),
+        'project'    => array('view', 'browse'),
+        'execution'  => array('view', 'all'),
+        'productplan'=> array('view', 'browse'),
+        'task'       => array('view', 'browse')
+    );
+    if(isset($moduleActionWhitelist[$module]) && !in_array($action, $moduleActionWhitelist[$module])) return $fields;
     $this->loadModel('ai');
-    $shouldHideAiScore = in_array($module, $this->config->ai->hideAiScoreFieldForModule);
+    $shouldHideAiScore = $action === 'view' && in_array($module, $this->config->ai->hideAiScoreFieldForModule);
     $shouldShowAiScore = $this->ai->checkPromptByModule($module);
     foreach($fields as $key => $field)
     {

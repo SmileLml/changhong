@@ -39,6 +39,6 @@ $config->ai->triggerAction['bug']['story/create']           = (object)array('m' 
 $config->ai->triggerAction['bug']['testcase/create']        = (object)array('m' => 'testcase', 'f' => 'create');
 $config->ai->triggerAction['doc']['edit']                   = (object)array('m' => 'doc', 'f' => 'edit');
 
-$config->ai->aiScoreAction = array('product', 'release', 'productplan', 'requirement', 'story', 'testcase', 'bug', 'project', 'execution', 'task');
+$config->ai->aiScoreAction = array('productplan', 'requirement', 'story', 'testcase', 'bug', 'project', 'execution', 'task');
 
 $config->ai->hideAiScoreFieldForModule = array('requirement', 'story', 'testcase', 'bug', 'task');

@@ -35,7 +35,7 @@ class flowWorkflowField extends workflowFieldModel
             $field->options = $this->getFieldOptions($field);
             $canExportFields[$field->field] = $field;
         }
-
+        if(!$this->loadModel('ai')->checkPromptByModule($module)) unset($canExportFields['aiScore']);
         if(empty($canExportFields)) return array($fields, $objects);
 
         foreach($canExportFields as $field) $fields[$field->field] = $field->name;
