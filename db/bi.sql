@@ -1,0 +1,1 @@
+INSERT INTO zt_module (`root`, `branch`, `name`, `parent`, `path`, `grade`, `order`, `type`, `from`, `owner`, `collector`, `short`, `deleted`) VALUE(1, 0, 'AI', 0, ',101,', 1, 50, 'pivot', 0, 'system', 'ai', '', '0');
