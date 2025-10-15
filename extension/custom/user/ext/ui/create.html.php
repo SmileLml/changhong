@@ -161,6 +161,7 @@ formPanel
         formGroup(
             set::width('1/2'),
             set::label($lang->user->scoreStatistic),
+            set::required(true),
             radioList
             (
                 set::name('scoreStatistic'),
