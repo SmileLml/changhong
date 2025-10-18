@@ -65,6 +65,7 @@ class workflowfield extends control
      */
     public function create($module)
     {
+        \a($this->session->workflowGroupID);die;
         if($_POST)
         {
             $result = $this->workflowfield->create($module);

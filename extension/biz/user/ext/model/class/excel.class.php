@@ -18,17 +18,19 @@ class excelUser extends userModel
      */
     public function setListValue()
     {
-        $roleList   = $this->lang->user->roleList;
-        $genderList = $this->lang->user->genderList;
-        $typeList   = $this->lang->user->typeList;
+        $roleList           = $this->lang->user->roleList;
+        $genderList         = $this->lang->user->genderList;
+        $typeList           = $this->lang->user->typeList;
+        $scoreStatisticList = $this->lang->user->scoreStatisticList;
 
         $depts = $this->loadModel('dept')->getOptionMenu();
         foreach($depts as $id => $dept) $depts[$id] = "$dept(#$id)";
 
-        $this->post->set('deptList',   $depts);
-        $this->post->set('roleList',   $roleList);
-        $this->post->set('typeList',   $typeList);
-        $this->post->set('genderList', $genderList);
+        $this->post->set('deptList',           $depts);
+        $this->post->set('roleList',           $roleList);
+        $this->post->set('typeList',           $typeList);
+        $this->post->set('genderList',         $genderList);
+        $this->post->set('scoreStatisticList', $scoreStatisticList);
         $this->post->set('listStyle', $this->config->user->export->listFields);
         $this->post->set('extraNum', 0);
     }
@@ -58,22 +60,23 @@ class excelUser extends userModel
             $visions   = isset($users->visions[$i]) ? $users->visions[$i] : array();
 
             $data[$i] = new stdclass();
-            $data[$i]->dept     = $users->dept[$i];
-            $data[$i]->account  = $users->account[$i];
-            $data[$i]->type     = !empty($users->type[$i]) ? $users->type[$i] : 'inside';
-            $data[$i]->realname = $users->realname[$i];
-            $data[$i]->role     = isset($users->role[$i]) ? $users->role[$i] : '';
-            $data[$i]->group    = $userGroup;
-            $data[$i]->email    = $users->email[$i];
-            $data[$i]->gender   = isset($users->gender[$i]) ? $users->gender[$i] : 'm';
-            $data[$i]->password = trim($users->password[$i]);
-            $data[$i]->join     = !empty($users->join[$i]) ? $users->join[$i] : null;
-            $data[$i]->qq       = $users->qq[$i];
-            $data[$i]->weixin   = $users->weixin[$i];
-            $data[$i]->mobile   = $users->mobile[$i];
-            $data[$i]->phone    = $users->phone[$i];
-            $data[$i]->address  = $users->address[$i];
-            $data[$i]->visions  = join(',', $visions);
+            $data[$i]->dept           = $users->dept[$i];
+            $data[$i]->account        = $users->account[$i];
+            $data[$i]->type           = !empty($users->type[$i]) ? $users->type[$i] : 'inside';
+            $data[$i]->realname       = $users->realname[$i];
+            $data[$i]->role           = isset($users->role[$i]) ? $users->role[$i] : '';
+            $data[$i]->group          = $userGroup;
+            $data[$i]->email          = $users->email[$i];
+            $data[$i]->gender         = isset($users->gender[$i]) ? $users->gender[$i] : 'm';
+            $data[$i]->password       = trim($users->password[$i]);
+            $data[$i]->join           = !empty($users->join[$i]) ? $users->join[$i] : null;
+            $data[$i]->qq             = $users->qq[$i];
+            $data[$i]->weixin         = $users->weixin[$i];
+            $data[$i]->mobile         = $users->mobile[$i];
+            $data[$i]->phone          = $users->phone[$i];
+            $data[$i]->address        = $users->address[$i];
+            $data[$i]->visions        = join(',', $visions);
+            $data[$i]->scoreStatistic = isset($users->scoreStatistic[$i]) ? $users->scoreStatistic[$i] : '1';
 
             /* Check required fields. */
             foreach(explode(',', $this->config->user->create->requiredFields) as $field)

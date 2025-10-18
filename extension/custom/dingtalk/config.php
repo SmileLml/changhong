@@ -1,8 +1,10 @@
 <?php
-$config->dingtalk->taskWordFields      = 'id,name,project,execution,module,parent,type,pri,status,`desc`';
-$config->dingtalk->taskWordBasicFields = 'ID,project,execution,module,parentTask,taskType,pri,status';
-$config->dingtalk->bugWordFields       = 'id,title,project,execution,module,product,type,pri,severity,status,resolution,resolvedBuild,steps';
-$config->dingtalk->bugWordBasicFields  = 'ID,project,execution,module,product,bugType,pri,severity,status,resolution,resolvedBuild';
+$config->dingtalk->taskWordFields       = 'id,name,project,execution,module,parent,type,pri,status,`desc`';
+$config->dingtalk->taskWordBasicFields  = 'ID,project,execution,module,parentTask,taskType,pri,status';
+$config->dingtalk->bugWordFields        = 'id,title,project,execution,module,product,type,pri,severity,status,resolution,resolvedBuild,steps';
+$config->dingtalk->bugWordBasicFields   = 'ID,project,execution,module,product,bugType,pri,severity,status,resolution,resolvedBuild';
+$config->dingtalk->storyWordFields      = 'id,title,stage,product,module,parent,source,sourceNote,category,pri,status,version';
+$config->dingtalk->storyWordBasicFields = 'ID,stage,product,module,parentStory,source,sourceNote,category,pri,status,project,execution';
 
 $config->dingtalk->tableOptions = array();
 $config->dingtalk->tableOptions['borderSize']  = 6;

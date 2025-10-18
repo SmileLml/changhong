@@ -35,13 +35,29 @@ $lang->dingtalk->resolvedBuild  = '解决版本';
 $lang->dingtalk->attachmentName = '附件名';
 $lang->dingtalk->attachmentLink = '附件链接';
 $lang->dingtalk->notHave        = '无';
+$lang->dingtalk->imageNotFound  = '图片未找到';
+$lang->dingtalk->stage          = '所处阶段';
+$lang->dingtalk->parentStory    = '父需求';
+$lang->dingtalk->source         = '来源';
+$lang->dingtalk->sourceNote     = '来源备注';
+$lang->dingtalk->category       = '类别';
+$lang->dingtalk->historyInfo    = '历史记录';
+$lang->dingtalk->attachmentInfo = '附件信息';
 
-$lang->dingtalk->taskAttributeInfo   = '一、任务属性信息';
-$lang->dingtalk->taskDescriptionInfo = '二、任务描述';
-$lang->dingtalk->taskProcessInfo     = '三、 实施（解决）过程记录';
+$lang->dingtalk->firstSection  = '一、';
+$lang->dingtalk->secondSection = '二、';
+$lang->dingtalk->thirdSection  = '三、';
+$lang->dingtalk->fourthSection = '四、';
+$lang->dingtalk->fifthSection  = '五、';
+
 $lang->dingtalk->taskDetailInfo      = '任务详情文档';
-$lang->dingtalk->imageNotFound       = '图片未找到';
-$lang->dingtalk->attachmentInfo      = '四、附件信息';
-$lang->dingtalk->bugAttributeInfo    = '一、Bug属性信息';
-$lang->dingtalk->bugStepsInfo        = '二、重现步骤';
-$lang->dingtalk->bugHistoryInfo      = '三、 历史记录';
+$lang->dingtalk->taskAttributeInfo   = '任务属性信息';
+$lang->dingtalk->taskDescriptionInfo = '任务描述';
+$lang->dingtalk->taskProcessInfo     = '实施（解决）过程记录';
+
+$lang->dingtalk->bugAttributeInfo = 'Bug属性信息';
+$lang->dingtalk->bugStepsInfo     = '重现步骤';
+
+$lang->dingtalk->storyAttributeInfo   = '需求属性信息';
+$lang->dingtalk->storyDescriptionInfo = '需求描述';
+$lang->dingtalk->storyVerifyInfo      = '验收标准';

@@ -3240,7 +3240,7 @@ class baseRouter
      */
     public function saveError($level, $message, $file, $line)
     {
-        \a($level, $message, $file, $line);die;
+        // \a($level, $message, $file, $line);die;
         if(empty($this->config->debug))  return true;
         if(!is_dir($this->logRoot))      return true;
         if(!is_writable($this->logRoot)) return true;

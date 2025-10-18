@@ -40,14 +40,21 @@ class dingtalk extends control
 
     public function createBugWord()
     {
-        $bugID = isset($_GET['bugID']) ? (int)$_GET['bugID'] : 1;
+        $this->dingtalk->createBugWord();
         
-        $result = $this->dingtalk->createBugWord($bugID);
+        return 'success';
+    }
+
+    public function createStoryWord()
+    {
+        $storyID = isset($_GET['storyID']) ? (int)$_GET['storyID'] : 1;
+        
+        $result = $this->dingtalk->createStoryWord($storyID);
         
         if($result) {
             // Word文档会直接输出并下载，不需要返回success
         } else {
-            echo '任务不存在或生成失败';
+            echo '故事不存在或生成失败';
         }
     }
 }

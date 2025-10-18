@@ -77,11 +77,7 @@ class dingtalkModel extends model
         $table     = constant('TABLE_' . strtoupper($objectType));
         $object    = $this->dao->select($fields)->from($table)->where('id')->eq($objectID)->fetch();
 
-        $this->loadModel('file');
-        if($objectType == 'task') $object = $this->file->replaceImgURL($object, 'desc');
-        if($objectType == 'bug')  $object = $this->file->replaceImgURL($object, 'steps');
-        
-        $files = $this->file->getByObject($objectType, $objectID);
+        $files = $this->loadModel('file')->getByObject($objectType, $objectID);
 
         foreach($files as $file) $file->url = common::getSysURL() . helper::createLink('file', 'download', "fileID={$file->id}");
 
@@ -141,23 +137,78 @@ class dingtalkModel extends model
      * @param int $taskId
      * @return bool
      */
-    public function createBugWord($bugID = 1)
+    public function createBugWord()
     {
-        $bug = $this->getObjectInfo($bugID, 'bug');
-        if(!$bug) return false;
+        $bugs = $this->dao->select($this->config->dingtalk->bugWordFields)->from(TABLE_BUG)->where('deleted')->eq(0)->fetchAll();
+        if(!$bugs) return false;
+
+        $this->loadModel('file');
+        foreach($bugs as $bug) 
+        {
+            $files = $this->file->getByObject('bug', $bug->id);
+            foreach($files as $file) $file->url = common::getSysURL() . helper::createLink('file', 'download', "fileID={$file->id}");
+
+            $bug->files         = $files;
+            $bug->projectName   = $this->dao->select('name')->from(TABLE_PROJECT)->where('id')->eq($bug->project)->fetch('name');
+            $bug->executionName = $this->dao->select('name')->from(TABLE_EXECUTION)->where('id')->eq($bug->execution)->fetch('name');
+            $bug->moduleName    = $this->dao->select('name')->from(TABLE_MODULE)->where('id')->eq($bug->module)->fetch('name');
+            $bug->productName   = $this->dao->select('name')->from(TABLE_PRODUCT)->where('id')->eq($bug->product)->fetch('name');
+            $bug->bugType       = zget($this->lang->bug->typeList, $bug->type, $bug->type);
+            $bug->pri           = zget($this->lang->bug->priList, $bug->pri, $bug->pri);
+            $bug->severity      = zget($this->lang->bug->severityList, $bug->severity, $bug->severity);
+            $bug->status        = zget($this->lang->bug->statusList, $bug->status, $bug->status);
+            $bug->resolution    = zget($this->lang->bug->resolutionList, $bug->resolution, $bug->resolution);
+            $bug->resolvedBuild = $this->dao->select('name')->from(TABLE_BUILD)->where('id')->eq($bug->resolvedBuild)->fetch('name');
         
-        $bug->projectName   = $this->dao->select('name')->from(TABLE_PROJECT)->where('id')->eq($bug->project)->fetch('name');
-        $bug->executionName = $this->dao->select('name')->from(TABLE_EXECUTION)->where('id')->eq($bug->execution)->fetch('name');
-        $bug->moduleName    = $this->dao->select('name')->from(TABLE_MODULE)->where('id')->eq($bug->module)->fetch('name');
-        $bug->productName   = $this->dao->select('name')->from(TABLE_PRODUCT)->where('id')->eq($bug->product)->fetch('name');
-        $bug->bugType       = zget($this->lang->bug->typeList, $bug->type, $bug->type);
-        $bug->pri           = zget($this->lang->bug->priList, $bug->pri, $bug->pri);
-        $bug->severity      = zget($this->lang->bug->severityList, $bug->severity, $bug->severity);
-        $bug->status        = zget($this->lang->bug->statusList, $bug->status, $bug->status);
-        $bug->resolution    = zget($this->lang->bug->resolutionList, $bug->resolution, $bug->resolution);
-        $bug->resolvedBuild = $this->dao->select('name')->from(TABLE_BUILD)->where('id')->eq($bug->resolvedBuild)->fetch('name');
+            $this->generateWordDocument($bug, 'bug');
+        }
+
+        return true;
+    }
+
+    /**
+     * 创建需求Word文档
+     * Create story Word document
+     * 
+     * @param int $storyID
+     * @return bool
+     */
+    public function createStoryWord($storyID = 1)
+    {
+        $story = $this->getObjectInfo($storyID, 'story');
+
+        if(!$story) return false;
+
+        $spec = $this->dao->select('spec,verify')->from(TABLE_STORYSPEC)->where('story')->eq($storyID)->andWhere('version')->eq($story->version)->fetch();
+
+        $executions = $this->dao->select('t2.id, t2.name')->from(TABLE_PROJECTSTORY)->alias('t1')
+            ->leftJoin(TABLE_EXECUTION)->alias('t2')->on('t1.project = t2.id')
+            ->where('t2.type')->in('sprint,stage,kanban')
+            ->andWhere('t1.story')->eq($storyID)
+            ->orderBy('t1.`order` DESC')
+            ->fetchPairs();
+
+        $projects = $this->dao->select('t2.id, t2.name')->from(TABLE_PROJECTSTORY)->alias('t1')
+            ->leftJoin(TABLE_PROJECT)->alias('t2')->on('t1.project = t2.id')
+            ->where('t2.type')->in('project')
+            ->andWhere('t1.story')->eq($storyID)
+            ->orderBy('t1.`order` DESC')
+            ->fetchPairs();
+
+        $story->executionName   = $executions ? implode(',', $executions) : $this->lang->dingtalk->notHave;
+        $story->productName     = $this->dao->select('name')->from(TABLE_PRODUCT)->where('id')->eq($story->product)->fetch('name');
+        $story->projectName     = $projects ? implode(',', $projects) : $this->lang->dingtalk->notHave;
+        $story->moduleName      = $this->dao->select('name')->from(TABLE_MODULE)->where('id')->eq($story->module)->fetch('name');
+        $story->parentStoryName = $this->dao->select('title')->from(TABLE_STORY)->where('id')->eq($story->parent)->fetch('name');
+        $story->sourceName      = zget($this->lang->story->sourceList, $story->source, $story->source);
+        $story->categoryName    = zget($this->lang->story->categoryList, $story->category, $story->category);
+        $story->pri             = zget($this->lang->story->priList, $story->pri, $story->pri);
+        $story->stageName       = zget($this->lang->story->stageList, $story->stage, $story->stage);
+        $story->status          = zget($this->lang->story->statusList, $story->status, $story->status);
+        $story->spec            = $spec ? $spec->spec : $this->lang->dingtalk->notHave;
+        $story->verify          = $spec ? $spec->verify : $this->lang->dingtalk->notHave;
         
-        $this->generateWordDocument($bug, 'bug');
+        $this->generateWordDocument($story, 'story');
         
         return true;
     }
@@ -185,7 +236,6 @@ class dingtalkModel extends model
         if(!is_dir($dir)) mkdir($dir, 0755, true);
         
         $this->createWordDocument($wordContent, $path);
-        exit;
     }
     
     /**
@@ -218,18 +268,18 @@ class dingtalkModel extends model
      */
     public function getTaskSections($task, $headers, $rows)
     {
-        $sections[] = array('title' => $this->lang->dingtalk->taskAttributeInfo, 'type' => 'table', 'data' => array('headers' => $headers, 'rows' => array($rows)));
-        $sections[] = array('title' => $this->lang->dingtalk->taskDescriptionInfo, 'type' => 'richtext', 'content' => $task->desc);
+        $sections[] = array('title' => $this->lang->dingtalk->firstSection . $this->lang->dingtalk->taskAttributeInfo, 'type' => 'table', 'data' => array('headers' => $headers, 'rows' => array($rows)));
+        $sections[] = array('title' => $this->lang->dingtalk->secondSection . $this->lang->dingtalk->taskDescriptionInfo, 'type' => 'richtext', 'content' => $task->desc);
         
         $processes = $this->getProcessInfo($task->id, 'task');
         if(!empty($processes)) 
         {
             $processContent = '';
             foreach($processes as $process) $processContent .= $process->comment . "\n";
-            $sections[] = array('title' => $this->lang->dingtalk->taskProcessInfo, 'type' => 'richtext', 'content' => $processContent);
+            $sections[] = array('title' => $this->lang->dingtalk->thirdSection . $this->lang->dingtalk->taskProcessInfo, 'type' => 'richtext', 'content' => $processContent);
         }
 
-        if($task->files) $sections[] = $this->getFileSections($task->files);
+        if($task->files) $sections[] = $this->getFileSections($this->lang->dingtalk->fourthSection . $this->lang->dingtalk->attachmentInfo, $task->files);
 
         return $sections;
     }
@@ -245,18 +295,46 @@ class dingtalkModel extends model
      */
     public function getBugSections($bug, $headers, $rows)
     {
-        $sections[] = array('title' => $this->lang->dingtalk->bugAttributeInfo, 'type' => 'table', 'data' => array('headers' => $headers, 'rows' => array($rows)));
-        $sections[] = array('title' => $this->lang->dingtalk->bugStepsInfo, 'type' => 'richtext', 'content' => $bug->steps);
+        $sections[] = array('title' => $this->lang->dingtalk->firstSection . $this->lang->dingtalk->bugAttributeInfo, 'type' => 'table', 'data' => array('headers' => $headers, 'rows' => array($rows)));
+        $sections[] = array('title' => $this->lang->dingtalk->secondSection . $this->lang->dingtalk->bugStepsInfo, 'type' => 'richtext', 'content' => $bug->steps);
         
         $processes = $this->getProcessInfo($bug->id, 'bug');
         if(!empty($processes)) 
         {
             $processContent = '';
             foreach($processes as $process) $processContent .= $process->comment . "\n";
-            $sections[] = array('title' => $this->lang->dingtalk->bugHistoryInfo, 'type' => 'richtext', 'content' => $processContent);
+            $sections[] = array('title' => $this->lang->dingtalk->thirdSection . $this->lang->dingtalk->historyInfo, 'type' => 'richtext', 'content' => $processContent);
         }
 
-        if($bug->files) $sections[] = $this->getFileSections($bug->files);
+        if($bug->files) $sections[] = $this->getFileSections($this->lang->dingtalk->fourthSection . $this->lang->dingtalk->attachmentInfo, $bug->files);
+
+        return $sections;
+    }
+
+    /**
+     * 获取需求部分
+     * Get story sections
+     * 
+     * @param  object $story
+     * @param  array  $headers
+     * @param  array  $rows
+     * @return array
+     */
+    public function getStorySections($story, $headers, $rows)
+    {
+        $sections[] = array('title' => $this->lang->dingtalk->firstSection . $this->lang->dingtalk->storyAttributeInfo, 'type' => 'table', 'data' => array('headers' => $headers, 'rows' => array($rows)));
+        $sections[] = array('title' => $this->lang->dingtalk->secondSection . $this->lang->dingtalk->storyDescriptionInfo, 'type' => 'richtext', 'content' => $story->spec);
+        $sections[] = array('title' => $this->lang->dingtalk->thirdSection . $this->lang->dingtalk->storyVerifyInfo, 'type' => 'richtext', 'content' => $story->verify);
+        
+        $processes = $this->getProcessInfo($story->id, 'story');
+        if(!empty($processes)) 
+        {
+            $processContent = '';
+            foreach($processes as $process) $processContent .= $process->comment . "\n";
+            $sections[] = array('title' => $this->lang->dingtalk->fourthSection . $this->lang->dingtalk->historyInfo, 'type' => 'richtext', 'content' => $processContent);
+        }
+
+        if($story->files) $sections[] = $this->getFileSections($this->lang->dingtalk->fifthSection . $this->lang->dingtalk->attachmentInfo, $story->files);
 
         return $sections;
     }
@@ -287,13 +365,40 @@ class dingtalkModel extends model
     }
 
     /**
+     * 获取需求行数据
+     * Get story rows data
+     * 
+     * @param  object $story
+     * @return array
+     */
+    public function getStoryRows($story)
+    {
+        $rows = array();
+        $rows[] = $story->id;
+        $rows[] = $story->stageName;
+        $rows[] = $story->productName ? $story->productName : $this->lang->dingtalk->notHave;
+        $rows[] = $story->moduleName;
+        $rows[] = $story->parentStory ? $story->parentStory : $this->lang->dingtalk->notHave;
+        $rows[] = $story->sourceName;
+        $rows[] = $story->sourceNote;
+        $rows[] = $story->categoryName;
+        $rows[] = $story->pri;
+        $rows[] = $story->status;
+        $rows[] = $story->projectName;
+        $rows[] = $story->executionName;
+
+        return $rows;
+    }
+
+    /**
      * 获取附件信息表格
      * Get attachment info table
      * 
-     * @param  array $files
+     * @param  string $title
+     * @param  array  $files
      * @return array
      */
-    private function getFileSections($files)
+    private function getFileSections($title, $files)
     {
         $attachmentHeaders = array($this->lang->dingtalk->attachmentName, $this->lang->dingtalk->attachmentLink);
 
@@ -306,7 +411,7 @@ class dingtalkModel extends model
         $data['rows']      = $attachmentRows;
         $data['colWidths'] = array(2500, 9000);
 
-        return array('title' => $this->lang->dingtalk->attachmentInfo, 'type'  => 'table', 'data'  => $data);
+        return array('title' => $title, 'type'  => 'table', 'data'  => $data);
     }
 
     /**
